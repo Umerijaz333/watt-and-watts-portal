@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTimeline } from "@/lib/queries";
@@ -25,7 +25,7 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-6">
-      <Link href="/clients" className="text-sm font-semibold text-brand">← Clients</Link>
+      <Link href="/clients" className="text-sm font-semibold text-link">← Clients</Link>
       <ClientHeader client={c} />
 
       <section>

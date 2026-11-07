@@ -1,5 +1,6 @@
 "use client";
 
+import { useHydrated } from "@/lib/use-hydrated";
 import { useMemo, useState, useTransition } from "react";
 import { quickCreateClient } from "@/app/actions/clients";
 
@@ -15,6 +16,7 @@ export function ClientPicker({
   value: string | null;
   onChange: (id: string | null) => void;
 }) {
+  const ready = useHydrated();
   const [clients, setClients] = useState(initial);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -32,12 +34,12 @@ export function ClientPicker({
 
   if (selected)
     return (
-      <div className="flex items-center gap-3 rounded-xl border-2 border-brand bg-amber-50 p-4">
+      <div className="flex items-center gap-3 rounded-xl border-2 border-link bg-tint p-4">
         <div className="min-w-0 flex-1">
           <p className="truncate text-2xl font-bold">{selected.name}</p>
-          {selected.firm && <p className="truncate text-lg text-muted">{selected.firm}</p>}
+          {selected.firm && <p className="truncate text-lg">{selected.firm}</p>}
         </div>
-        <button type="button" className="btn-secondary px-4 py-3 text-lg" onClick={() => onChange(null)}>Change</button>
+        <button type="button" disabled={!ready} className="btn-secondary px-4 py-3 text-lg" onClick={() => onChange(null)}>Change</button>
         <input type="hidden" name="client_id" value={selected.id} />
       </div>
     );
@@ -54,11 +56,11 @@ export function ClientPicker({
           <label className="mb-1 block text-xl font-semibold" htmlFor="new-client-phone">Phone</label>
           <input id="new-client-phone" type="tel" inputMode="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="input py-4 text-xl" />
         </div>
-        {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xl font-medium text-red-800">{error}</p>}
+        {error && <p role="alert" className="rounded-lg bg-overdue-tint p-3 text-xl font-medium text-overdue">{error}</p>}
         <div className="flex gap-2">
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || !ready}
             className="btn-primary flex-1 py-4 text-xl"
             onClick={() => {
               setError(undefined);
@@ -77,7 +79,7 @@ export function ClientPicker({
           >
             {pending ? "Adding…" : "Add client"}
           </button>
-          <button type="button" className="btn-secondary px-5 py-4 text-xl" onClick={() => setCreating(false)}>Cancel</button>
+          <button type="button" disabled={!ready} className="btn-secondary px-5 py-4 text-xl" onClick={() => setCreating(false)}>Cancel</button>
         </div>
       </div>
     );
@@ -95,13 +97,13 @@ export function ClientPicker({
       <ul className="divide-y divide-line overflow-hidden rounded-xl border border-gray-400 bg-white">
         {matches.map((c) => (
           <li key={c.id}>
-            <button type="button" onClick={() => onChange(c.id)} className="block w-full px-4 py-4 text-left hover:bg-amber-50 active:bg-amber-100">
+            <button type="button" disabled={!ready} onClick={() => onChange(c.id)} className="block w-full px-4 py-4 text-left hover:bg-tint active:bg-tint-strong">
               <span className="block text-xl font-semibold">{c.name}</span>
-              {c.firm && <span className="block text-lg text-muted">{c.firm}</span>}
+              {c.firm && <span className="block text-lg">{c.firm}</span>}
             </button>
           </li>
         ))}
-        {matches.length === 0 && <li className="px-4 py-4 text-lg text-muted">No client found{query ? ` for “${query}”` : ""}.</li>}
+        {matches.length === 0 && <li className="px-4 py-4 text-lg">No client found{query ? ` for “${query}”` : ""}.</li>}
       </ul>
       <button
         type="button"

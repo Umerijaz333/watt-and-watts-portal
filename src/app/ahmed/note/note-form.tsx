@@ -50,7 +50,7 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
       <fieldset>
         <legend className="mb-2 text-xl font-bold">1. Client</legend>
         <ClientPicker clients={clients} value={clientId} onChange={(id) => { setClientId(id); setClientError(undefined); }} />
-        {clientError && <p role="alert" className="mt-2 rounded-lg bg-red-50 p-3 text-xl font-medium text-red-800">{clientError}</p>}
+        {clientError && <p role="alert" className="mt-2 rounded-lg bg-overdue-tint p-3 text-xl font-medium text-overdue">{clientError}</p>}
       </fieldset>
 
       <div>
@@ -73,7 +73,7 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
                 key={q.label}
                 type="button"
                 onClick={() => setDate(v)}
-                className={`rounded-xl border-2 py-3 text-lg font-semibold ${date === v ? "border-brand bg-amber-50 text-brand-dark" : "border-gray-400 bg-white"}`}
+                className={`rounded-xl border-2 py-3 text-lg font-semibold ${date === v ? "border-link bg-tint text-navy" : "border-gray-400 bg-white"}`}
               >
                 {q.label}
               </button>
@@ -81,7 +81,7 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
           })}
         </div>
         <input id="follow" name="next_follow_up" type="date" required min={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} className="input py-4 text-xl" />
-        {date && <p className="mt-1 text-lg text-muted">{formatDate(date)}</p>}
+        {date && <p className="mt-1 text-lg">{formatDate(date)}</p>}
       </div>
 
       <FormMessage state={state} large />

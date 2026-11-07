@@ -1,6 +1,7 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { createClient } from "@/lib/supabase/server";
-import { STAGES, stageLabel } from "@/lib/constants";
+import { STAGES } from "@/lib/constants";
+import { StageChip } from "@/components/stage-chip";
 import { formatDate, todayISO } from "@/lib/dates";
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ q?: string; stage?: string }> }) {
@@ -35,7 +36,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       </form>
 
       {error ? (
-        <p role="alert" className="card text-red-700">Could not load clients: {error.message}</p>
+        <p role="alert" className="card text-overdue">Could not load clients: {error.message}</p>
       ) : !clients?.length ? (
         <div className="card text-center">
           <p className="mb-3 text-muted">{q || stage ? "No clients match this search." : "No clients yet."}</p>
@@ -52,14 +53,14 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
             const isToday = c.next_follow_up === today;
             return (
               <li key={c.id}>
-                <Link href={`/clients/${c.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                <Link href={`/clients/${c.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-tint">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{c.name}</p>
                     <p className="truncate text-sm text-muted">{[c.firm, c.city].filter(Boolean).join(" · ") || "—"}</p>
                   </div>
-                  <span className="badge">{stageLabel(c.stage)}</span>
-                  <span className={`hidden w-28 text-right text-sm sm:block ${late ? "font-semibold text-red-700" : isToday ? "font-semibold text-amber-700" : "text-muted"}`}>
-                    {c.next_follow_up ? formatDate(c.next_follow_up) : "No follow-up"}
+                  <StageChip stage={c.stage} />
+                  <span className={`hidden w-36 text-right text-sm sm:block ${late ? "font-semibold text-overdue" : isToday ? "font-semibold text-due" : "text-muted"}`}>
+                    {late ? "Overdue · " : isToday ? "Today · " : ""}{c.next_follow_up ? formatDate(c.next_follow_up) : "No follow-up"}
                   </span>
                 </Link>
               </li>

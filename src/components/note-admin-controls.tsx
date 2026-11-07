@@ -1,5 +1,6 @@
 "use client";
 
+import { useHydrated } from "@/lib/use-hydrated";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { updateNote, deleteNote } from "@/app/actions/notes";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
@@ -9,6 +10,7 @@ import { formatDate } from "@/lib/dates";
 type Note = Extract<TimelineItem, { kind: "note" }>;
 
 export function NoteAdminControls({ note }: { note: Note }) {
+  const ready = useHydrated();
   const [editing, setEditing] = useState(false);
   const [state, action] = useActionState(updateNote, null);
   const [deleting, startDelete] = useTransition();
@@ -37,7 +39,7 @@ export function NoteAdminControls({ note }: { note: Note }) {
         <FormMessage state={state} />
         <div className="flex gap-2">
           <SubmitButton>Save</SubmitButton>
-          <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
+          <button type="button" disabled={!ready} className="btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
         </div>
       </form>
     );
@@ -56,10 +58,10 @@ export function NoteAdminControls({ note }: { note: Note }) {
         </dl>
       )}
       <div className="mt-3 flex gap-2">
-        <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => setEditing(true)}>Edit</button>
+        <button type="button" disabled={!ready} className="btn-secondary px-3 py-1.5 text-sm" onClick={() => setEditing(true)}>Edit</button>
         <button
           type="button"
-          disabled={deleting}
+          disabled={deleting || !ready}
           className="btn-danger px-3 py-1.5 text-sm"
           onClick={() => {
             if (!confirm("Delete this note? This cannot be undone.")) return;
@@ -73,7 +75,7 @@ export function NoteAdminControls({ note }: { note: Note }) {
           {deleting ? "Deleting…" : "Delete"}
         </button>
       </div>
-      {deleteError && <p role="alert" className="mt-2 text-sm text-red-700">{deleteError}</p>}
+      {deleteError && <p role="alert" className="mt-2 text-sm text-overdue">{deleteError}</p>}
     </div>
   );
 }

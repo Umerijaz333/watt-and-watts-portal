@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function LoginForm({ initialError }: { initialError?: string }) {
   const router = useRouter();
@@ -10,6 +11,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | undefined>(initialError);
   const [loading, setLoading] = useState(false);
+  const ready = useHydrated();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,8 +49,8 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         <label htmlFor="password" className="label">Password</label>
         <input id="password" type="password" autoComplete="current-password" required className="input text-lg" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</p>}
-      <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-lg">
+      {error && <p role="alert" className="rounded-lg bg-overdue-tint p-3 text-sm font-medium text-overdue">{error}</p>}
+      <button type="submit" disabled={loading || !ready} className="btn-primary w-full py-3 text-lg">
         {loading ? "Signing in…" : "Sign in"}
       </button>
     </form>

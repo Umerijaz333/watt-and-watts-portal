@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/link";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getClientOptions, getProfiles } from "@/lib/queries";
@@ -43,7 +43,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           <Link
             key={f.key}
             href={`/tasks?filter=${f.key}`}
-            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${filter === f.key ? "bg-ink text-white" : "border border-line bg-white text-muted"}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${filter === f.key ? "bg-navy text-white" : "border border-line bg-white text-muted"}`}
           >
             {f.label}
           </Link>
@@ -51,13 +51,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       </div>
 
       {error ? (
-        <p role="alert" className="card text-red-700">Could not load tasks: {error.message}</p>
+        <p role="alert" className="card text-overdue">Could not load tasks: {error.message}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {TASK_STATUSES.map((col) => {
             const list = tasks.filter((t) => t.status === col.value);
             return (
-              <section key={col.value} className="rounded-xl bg-gray-100 p-3">
+              <section key={col.value} className={`rounded-xl border-t-4 bg-[#eceef2] p-3 ${col.value === "done" ? "border-done" : col.value === "doing" ? "border-link" : "border-navy"}`}>
                 <h2 className="mb-2 font-bold">{col.label} <span className="text-muted">({list.length})</span></h2>
                 {list.length === 0 ? (
                   <p className="p-2 text-sm text-muted">{col.value === "todo" ? "Nothing to do. Add a task above." : "Empty."}</p>
@@ -68,13 +68,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                       return (
                         <li key={t.id} className="rounded-lg border border-line bg-white p-3">
                           <div className="flex items-start gap-2">
-                            <p className={`flex-1 font-medium ${t.status === "done" ? "text-muted line-through" : ""}`}>{t.title}</p>
+                            <p className={`flex-1 font-medium ${t.status === "done" ? "text-done line-through" : ""}`}>{t.status === "done" && <span className="sr-only">Done: </span>}{t.title}</p>
                             <TaskStatusSelect id={t.id} status={t.status} />
                           </div>
                           {t.description && <p className="mt-1 text-sm text-muted">{t.description}</p>}
                           <p className="mt-2 flex flex-wrap gap-x-2 text-sm text-muted">
-                            <span className="badge">{t.owner_profile?.name ?? "Unassigned"}</span>
-                            <span className={late ? "font-semibold text-red-700" : ""}>{t.due_date ? formatDate(t.due_date) : "No due date"}</span>
+                            <span className="badge border-tint-strong bg-tint text-navy">Owner: {t.owner_profile?.name ?? "Unassigned"}</span>
+                            <span className={late ? "font-semibold text-overdue" : ""}>{late ? "Overdue · " : ""}{t.due_date ? formatDate(t.due_date) : "No due date"}</span>
                             {t.client && <Link href={`/clients/${t.client.id}`} className="underline">{t.client.name}</Link>}
                           </p>
                           <div className="mt-1 text-right"><TaskDelete id={t.id} /></div>

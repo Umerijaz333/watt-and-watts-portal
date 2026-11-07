@@ -1,5 +1,6 @@
 "use client";
 
+import { useHydrated } from "@/lib/use-hydrated";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { saveRequirement, deleteRequirement } from "@/app/actions/requirements";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
@@ -21,6 +22,7 @@ export function Requirements({ clientId, rows }: { clientId: string; rows: Requi
 }
 
 function RequirementRow({ row }: { row: Requirement }) {
+  const ready = useHydrated();
   const [editing, setEditing] = useState(false);
   const [state, action] = useActionState(saveRequirement, null);
   const [deleting, startDelete] = useTransition();
@@ -38,7 +40,7 @@ function RequirementRow({ row }: { row: Requirement }) {
           <FormMessage state={state} />
           <div className="flex gap-2">
             <SubmitButton className="btn-primary py-1.5 text-sm">Save</SubmitButton>
-            <button type="button" className="btn-secondary py-1.5 text-sm" onClick={() => setEditing(false)}>Cancel</button>
+            <button type="button" disabled={!ready} className="btn-secondary py-1.5 text-sm" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>
       </li>
@@ -49,14 +51,14 @@ function RequirementRow({ row }: { row: Requirement }) {
       <div className="min-w-0 flex-1">
         <p className="font-medium">{row.product_text}</p>
         {row.notes && <p className="text-sm text-muted">{row.notes}</p>}
-        {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
+        {err && <p role="alert" className="text-sm text-overdue">{err}</p>}
       </div>
       <span className="w-16 text-right font-semibold">{row.quantity ?? "—"}<span className="ml-1 text-xs font-normal text-muted">qty</span></span>
       <div className="flex gap-1">
-        <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => setEditing(true)}>Edit</button>
+        <button type="button" disabled={!ready} className="btn-secondary px-3 py-1.5 text-sm" onClick={() => setEditing(true)}>Edit</button>
         <button
           type="button"
-          disabled={deleting}
+          disabled={deleting || !ready}
           className="btn-danger px-3 py-1.5 text-sm"
           onClick={() => {
             if (!confirm(`Delete "${row.product_text}"?`)) return;
@@ -85,6 +87,7 @@ function RequirementInputs({ row }: { row?: Requirement }) {
 }
 
 function AddRequirement({ clientId }: { clientId: string }) {
+  const ready = useHydrated();
   const [state, action] = useActionState(saveRequirement, null);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {

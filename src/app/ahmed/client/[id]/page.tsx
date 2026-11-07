@@ -1,10 +1,12 @@
-import Link from "next/link";
+import Link from "@/components/link";
+import { NoteIcon, PhoneIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTimeline } from "@/lib/queries";
 import { Timeline } from "@/components/timeline";
 import { formatDate } from "@/lib/dates";
 import { stageLabel } from "@/lib/constants";
+import { StageChip } from "@/components/stage-chip";
 
 export default async function AhmedClientSummary({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,23 +30,24 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
 
   return (
     <div className="space-y-5">
-      <Link href="/ahmed/followups" className="text-lg font-semibold text-brand">← Follow-ups</Link>
+      <Link href="/ahmed/followups" className="text-lg font-semibold text-link">← Follow-ups</Link>
       <div>
         <h1 className="text-3xl font-bold">{c.name}</h1>
-        {c.firm && <p className="text-xl text-muted">{c.firm}</p>}
+        {c.firm && <p className="text-xl">{c.firm}</p>}
+        <StageChip stage={c.stage} className="mt-2 text-base" />
       </div>
 
       <div className="grid gap-3">
-        <Link href={`/ahmed/note?client=${c.id}`} className="btn-primary w-full py-5 text-2xl">📝 Add note</Link>
+        <Link href={`/ahmed/note?client=${c.id}`} className="btn-primary w-full py-5 text-2xl"><NoteIcon size={28} /> Add note</Link>
         {c.phone && (
-          <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="btn-secondary w-full border-2 py-4 text-xl">📞 Call {c.phone}</a>
+          <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="btn-secondary w-full border-2 py-4 text-xl"><PhoneIcon size={26} /> Call {c.phone}</a>
         )}
       </div>
 
       <dl className="card space-y-3">
         {rows.map(([k, v]) => (
           <div key={k}>
-            <dt className="text-lg font-semibold text-muted">{k}</dt>
+            <dt className="text-lg font-bold text-navy">{k}</dt>
             <dd className="whitespace-pre-wrap text-xl">{v || "—"}</dd>
           </div>
         ))}

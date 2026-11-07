@@ -1,4 +1,6 @@
 "use client";
+import { PhoneIcon } from "@/components/icons";
+import { useHydrated } from "@/lib/use-hydrated";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { updateClientAction, updateClientField } from "@/app/actions/clients";
@@ -48,7 +50,7 @@ export function ClientHeader({ client }: { client: Client }) {
             <div className="mt-2 flex flex-wrap gap-2">
               {client.phone ? (
                 <a href={`tel:${client.phone.replace(/[^\d+]/g, "")}`} className="btn-primary py-2">
-                  📞 {client.phone}
+                  <PhoneIcon size={18} /> {client.phone}
                 </a>
               ) : (
                 <span className="text-sm text-muted">No phone saved</span>
@@ -103,6 +105,7 @@ function AutoSave({
   const [value, setValue] = useState(initial);
   const [pending, start] = useTransition();
   const [status, setStatus] = useState<{ ok: boolean; text: string }>();
+  const ready = useHydrated();
   useEffect(() => setValue(initial), [initial]);
 
   const onChange = (v: string) => {
@@ -123,21 +126,21 @@ function AutoSave({
   const hint =
     field === "next_follow_up" && value
       ? value < today
-        ? { cls: "text-red-700", text: `Overdue (${formatDate(value)})` }
+        ? { cls: "text-overdue", text: `Overdue (${formatDate(value)})` }
         : value === today
-          ? { cls: "text-amber-700", text: "Due today" }
+          ? { cls: "text-due", text: "Due today" }
           : null
       : null;
 
   return (
     <div>
       <label className="label" htmlFor={field}>{label}</label>
-      {children(value, onChange, pending)}
+      {children(value, onChange, pending || !ready)}
       <p className="mt-1 h-5 text-sm">
         {pending ? (
           <span className="text-muted">Saving…</span>
         ) : status ? (
-          <span role={status.ok ? "status" : "alert"} className={status.ok ? "text-green-700" : "text-red-700"}>{status.text}</span>
+          <span role={status.ok ? "status" : "alert"} className={status.ok ? "text-done" : "text-overdue"}>{status.text}</span>
         ) : hint ? (
           <span className={`font-semibold ${hint.cls}`}>{hint.text}</span>
         ) : null}

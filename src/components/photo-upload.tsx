@@ -1,4 +1,6 @@
 "use client";
+import { CameraIcon } from "@/components/icons";
+import { useHydrated } from "@/lib/use-hydrated";
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -41,6 +43,7 @@ export function PhotoUpload({
   const [caption, setCaption] = useState("");
   const [status, setStatus] = useState<"idle" | "uploading" | "saved">("idle");
   const [error, setError] = useState<string>();
+  const ready = useHydrated();
 
   useEffect(() => {
     if (!file) return setPreview(null);
@@ -79,13 +82,13 @@ export function PhotoUpload({
   const text = large ? "text-xl" : "";
   return (
     <div className={`space-y-3 ${text}`}>
-      <label className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-400 bg-gray-50 text-center hover:bg-gray-100 ${large ? "min-h-48 p-6" : "min-h-28 p-4"}`}>
+      <label className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-btn/50 bg-tint text-center text-navy hover:bg-tint-strong ${large ? "min-h-48 p-6" : "min-h-28 p-4"}`}>
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt="Selected photo" className="max-h-72 rounded-lg" />
         ) : (
           <>
-            <span className={large ? "text-5xl" : "text-3xl"} aria-hidden>📷</span>
+            <CameraIcon size={large ? 56 : 36} />
             <span className="mt-2 font-semibold">Take photo or choose from gallery</span>
           </>
         )}
@@ -103,7 +106,7 @@ export function PhotoUpload({
         />
       </label>
       {preview && (
-        <button type="button" className="text-sm font-semibold text-brand underline" onClick={() => inputRef.current?.click()}>
+        <button type="button" className="text-sm font-semibold text-link underline" onClick={() => inputRef.current?.click()}>
           Retake / choose another
         </button>
       )}
@@ -111,15 +114,15 @@ export function PhotoUpload({
         <label className={large ? "mb-1 block text-xl font-semibold" : "label"} htmlFor="caption">Caption (optional)</label>
         <input id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} className={`input ${large ? "py-4 text-xl" : ""}`} />
       </div>
-      {error && <p role="alert" className="rounded-lg bg-red-50 p-3 font-medium text-red-800">{error}</p>}
-      {status === "saved" && !large && <p role="status" className="rounded-lg bg-green-50 p-3 font-medium text-green-800">Photo saved.</p>}
+      {error && <p role="alert" className="rounded-lg bg-overdue-tint p-3 font-medium text-overdue">{error}</p>}
+      {status === "saved" && !large && <p role="status" className="rounded-lg bg-done-tint p-3 font-medium text-done">Photo saved.</p>}
       <button
         type="button"
         onClick={save}
-        disabled={status === "uploading"}
+        disabled={status === "uploading" || !ready}
         className={`btn-primary w-full ${large ? "py-5 text-2xl" : ""}`}
       >
-        {status === "uploading" ? "Uploading…" : "Save photo"}
+        {!ready ? "Loading…" : status === "uploading" ? "Uploading…" : "Save photo"}
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useHydrated } from "@/lib/use-hydrated";
 import type { ActionState } from "@/lib/types";
 
 export function SubmitButton({
@@ -13,9 +14,10 @@ export function SubmitButton({
   className?: string;
 }) {
   const { pending } = useFormStatus();
+  const ready = useHydrated();
   return (
-    <button type="submit" disabled={pending} className={className} aria-busy={pending}>
-      {pending ? pendingText : children}
+    <button type="submit" disabled={pending || !ready} className={className} aria-busy={pending || !ready}>
+      {!ready ? "Loading…" : pending ? pendingText : children}
     </button>
   );
 }
@@ -24,13 +26,13 @@ export function FormMessage({ state, large = false }: { state: ActionState; larg
   if (!state) return null;
   if (state.error)
     return (
-      <p role="alert" className={`rounded-lg bg-red-50 p-3 font-medium text-red-800 ${large ? "text-xl" : "text-sm"}`}>
+      <p role="alert" className={`rounded-lg bg-overdue-tint p-3 font-medium text-overdue ${large ? "text-xl" : "text-sm"}`}>
         {state.error}
       </p>
     );
   if (state.message)
     return (
-      <p role="status" className={`rounded-lg bg-green-50 p-3 font-medium text-green-800 ${large ? "text-xl" : "text-sm"}`}>
+      <p role="status" className={`rounded-lg bg-done-tint p-3 font-medium text-done ${large ? "text-xl" : "text-sm"}`}>
         {state.message}
       </p>
     );

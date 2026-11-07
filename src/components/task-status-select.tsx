@@ -3,17 +3,19 @@
 import { useState, useTransition } from "react";
 import { setTaskStatus } from "@/app/actions/tasks";
 import { TASK_STATUSES } from "@/lib/constants";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function TaskStatusSelect({ id, status, large = false }: { id: string; status: string; large?: boolean }) {
   const [value, setValue] = useState(status);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
+  const ready = useHydrated();
   return (
     <div className="shrink-0 text-right">
       <select
         aria-label="Status"
         value={value}
-        disabled={pending}
+        disabled={pending || !ready}
         className={`rounded-lg border border-gray-400 bg-white font-semibold ${large ? "px-3 py-3 text-xl" : "px-2 py-1.5 text-sm"}`}
         onChange={(e) => {
           const next = e.target.value;
@@ -34,7 +36,7 @@ export function TaskStatusSelect({ id, status, large = false }: { id: string; st
         ))}
       </select>
       {pending && <p className="text-xs text-muted">Saving…</p>}
-      {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-xs text-overdue">{error}</p>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import Link from "@/components/link";
+import Link from "next/link";
 import { NoteIcon, CameraIcon, CalendarIcon } from "@/components/icons";
 import { requireProfile } from "@/lib/auth";
 import { getDueClients } from "@/lib/queries";

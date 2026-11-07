@@ -9,18 +9,20 @@ import { TaskStatusSelect } from "@/components/task-status-select";
 export default async function Dashboard() {
   const profile = await requireAdmin();
   const today = todayISO();
-  const due = await getDueClients(today);
+  const supabase = await createClient();
+  const [due, { data: myTasks, error: taskErr }] = await Promise.all([
+    getDueClients(today),
+    supabase
+      .from("tasks")
+      .select("id, title, due_date, status, client:clients(id, name)")
+      .eq("owner", profile.id)
+      .neq("status", "done")
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(10),
+  ]);
   const overdue = due.filter((c) => c.next_follow_up! < today);
   const dueToday = due.filter((c) => c.next_follow_up === today);
 
-  const supabase = await createClient();
-  const { data: myTasks, error: taskErr } = await supabase
-    .from("tasks")
-    .select("id, title, due_date, status, client:clients(id, name)")
-    .eq("owner", profile.id)
-    .neq("status", "done")
-    .order("due_date", { ascending: true, nullsFirst: false })
-    .limit(10);
 
   return (
     <div className="space-y-6">

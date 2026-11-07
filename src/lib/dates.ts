@@ -1,0 +1,46 @@
+export const TZ = "Asia/Karachi";
+
+/** Today's date in Asia/Karachi as YYYY-MM-DD. */
+export function todayISO(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2026-11-07" -> "07 Nov 2026". Date-only values are not timezone-shifted. */
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  const mi = Number(m) - 1;
+  if (!y || Number.isNaN(mi) || !d) return iso;
+  return `${d} ${MONTHS[mi]} ${y}`;
+}
+
+/** Timestamp -> "07 Nov 2026, 3:45 pm" in Asia/Karachi. */
+export function formatDateTime(ts: string | null | undefined): string {
+  if (!ts) return "—";
+  const date = new Date(ts);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("day")} ${get("month")} ${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toLowerCase()}`;
+}
+
+/** Days between today (Karachi) and the given date; negative = overdue. */
+export function daysFromToday(iso: string): number {
+  const t = Date.parse(todayISO() + "T00:00:00Z");
+  const d = Date.parse(iso.slice(0, 10) + "T00:00:00Z");
+  return Math.round((d - t) / 86400000);
+}

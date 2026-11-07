@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { str, int, errMsg } from "@/lib/action-utils";
@@ -24,7 +23,6 @@ export async function saveRequirement(_prev: ActionState, fd: FormData): Promise
       ? await supabase.from("client_requirements").insert({ ...row, client_id: clientId })
       : { error: { message: "Missing client." } };
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true, message: id ? "Updated." : "Added." };
 }
 
@@ -33,6 +31,5 @@ export async function deleteRequirement(id: string): Promise<{ ok: boolean; erro
   const supabase = await createClient();
   const { error } = await supabase.from("client_requirements").delete().eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }

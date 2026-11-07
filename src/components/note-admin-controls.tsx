@@ -1,7 +1,9 @@
 "use client";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
 import { useHydrated } from "@/lib/use-hydrated";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateNote, deleteNote } from "@/app/actions/notes";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import type { TimelineItem } from "@/lib/queries";
@@ -16,9 +18,8 @@ export function NoteAdminControls({ note }: { note: Note }) {
   const [deleting, startDelete] = useTransition();
   const [deleteError, setDeleteError] = useState<string>();
 
-  useEffect(() => {
-    if (state?.ok) setEditing(false);
-  }, [state]);
+  useRefreshOnSuccess(state, () => setEditing(false));
+  const router = useRouter();
 
   if (editing)
     return (
@@ -69,6 +70,7 @@ export function NoteAdminControls({ note }: { note: Note }) {
             startDelete(async () => {
               const res = await deleteNote(note.id);
               if (!res.ok) setDeleteError(res.error);
+              else router.refresh();
             });
           }}
         >

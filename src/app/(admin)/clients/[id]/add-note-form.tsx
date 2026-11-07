@@ -1,15 +1,14 @@
 "use client";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useRef } from "react";
 import { addNote } from "@/app/actions/notes";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 
 export function AddNoteForm({ clientId }: { clientId: string }) {
   const [state, action] = useActionState(addNote, null);
   const formRef = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
+  useRefreshOnSuccess(state, () => formRef.current?.reset());
 
   return (
     <form ref={formRef} action={action} className="card space-y-3">

@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useHydrated } from "@/lib/use-hydrated";
 import { useState, useTransition } from "react";
@@ -8,6 +9,7 @@ export function TaskDelete({ id }: { id: string }) {
   const ready = useHydrated();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string>();
+  const router = useRouter();
   return (
     <>
       <button
@@ -20,6 +22,7 @@ export function TaskDelete({ id }: { id: string }) {
           start(async () => {
             const res = await deleteTask(id);
             if (!res.ok) setErr(res.error);
+            else router.refresh();
           });
         }}
       >

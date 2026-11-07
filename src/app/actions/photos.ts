@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { errMsg } from "@/lib/action-utils";
@@ -19,6 +18,5 @@ export async function recordPhoto(
     .from("note_photos")
     .insert({ client_id: clientId, storage_path: storagePath, caption: caption.trim() || null });
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }

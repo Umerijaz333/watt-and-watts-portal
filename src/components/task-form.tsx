@@ -1,6 +1,7 @@
 "use client";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useRef } from "react";
 import { createTask } from "@/app/actions/tasks";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Profile } from "@/lib/types";
@@ -18,9 +19,7 @@ export function TaskForm({
 }) {
   const [state, action] = useActionState(createTask, null);
   const formRef = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
+  useRefreshOnSuccess(state, () => formRef.current?.reset());
 
   const lbl = simple ? "mb-1 block text-xl font-semibold" : "label";
   const inp = `input ${simple ? "py-4 text-xl" : ""}`;

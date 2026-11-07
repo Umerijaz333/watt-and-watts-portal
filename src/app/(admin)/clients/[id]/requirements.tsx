@@ -1,7 +1,9 @@
 "use client";
 
 import { useHydrated } from "@/lib/use-hydrated";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
 import { saveRequirement, deleteRequirement } from "@/app/actions/requirements";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Requirement } from "@/lib/types";
@@ -27,9 +29,8 @@ function RequirementRow({ row }: { row: Requirement }) {
   const [state, action] = useActionState(saveRequirement, null);
   const [deleting, startDelete] = useTransition();
   const [err, setErr] = useState<string>();
-  useEffect(() => {
-    if (state?.ok) setEditing(false);
-  }, [state]);
+  useRefreshOnSuccess(state, () => setEditing(false));
+  const router = useRouter();
 
   if (editing)
     return (
@@ -66,6 +67,7 @@ function RequirementRow({ row }: { row: Requirement }) {
             startDelete(async () => {
               const res = await deleteRequirement(row.id);
               if (!res.ok) setErr(res.error);
+              else router.refresh();
             });
           }}
         >
@@ -90,9 +92,7 @@ function AddRequirement({ clientId }: { clientId: string }) {
   const ready = useHydrated();
   const [state, action] = useActionState(saveRequirement, null);
   const formRef = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
+  useRefreshOnSuccess(state, () => formRef.current?.reset());
   return (
     <form ref={formRef} action={action} className="card space-y-2">
       <input type="hidden" name="client_id" value={clientId} />

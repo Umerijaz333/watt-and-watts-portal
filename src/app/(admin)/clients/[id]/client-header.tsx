@@ -1,4 +1,6 @@
 "use client";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
+import { useRouter } from "next/navigation";
 import { PhoneIcon } from "@/components/icons";
 import { useHydrated } from "@/lib/use-hydrated";
 
@@ -12,9 +14,7 @@ import type { Client } from "@/lib/types";
 export function ClientHeader({ client }: { client: Client }) {
   const [editing, setEditing] = useState(false);
   const [state, action] = useActionState(updateClientAction, null);
-  useEffect(() => {
-    if (state?.ok) setEditing(false);
-  }, [state]);
+  useRefreshOnSuccess(state, () => setEditing(false));
 
   return (
     <div className="card space-y-4">
@@ -106,6 +106,7 @@ function AutoSave({
   const [pending, start] = useTransition();
   const [status, setStatus] = useState<{ ok: boolean; text: string }>();
   const ready = useHydrated();
+  const router = useRouter();
   useEffect(() => setValue(initial), [initial]);
 
   const onChange = (v: string) => {
@@ -114,7 +115,10 @@ function AutoSave({
     setStatus(undefined);
     start(async () => {
       const res = await updateClientField(clientId, field, v);
-      if (res.ok) setStatus({ ok: true, text: "Saved" });
+      if (res.ok) {
+        setStatus({ ok: true, text: "Saved" });
+        router.refresh();
+      }
       else {
         setValue(prev);
         setStatus({ ok: false, text: res.error ?? "Could not save" });

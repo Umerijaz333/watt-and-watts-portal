@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
@@ -38,7 +37,6 @@ export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionS
     if (upErr) return { ok: false, error: `Note saved, but the client's follow-up was not updated: ${errMsg(upErr)}` };
   }
 
-  revalidatePath("/", "layout");
   return { ok: true, message: "Note saved." };
 }
 
@@ -57,7 +55,6 @@ export async function updateNote(_prev: ActionState, fd: FormData): Promise<Acti
     .update({ body, pending_from_client: str(fd, "pending_from_client"), next_follow_up: followUp })
     .eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true, message: "Note updated." };
 }
 
@@ -67,6 +64,5 @@ export async function deleteNote(id: string): Promise<{ ok: boolean; error?: str
   const supabase = await createClient();
   const { error } = await supabase.from("notes").delete().eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }

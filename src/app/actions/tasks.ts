@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
@@ -24,7 +23,6 @@ export async function createTask(_prev: ActionState, fd: FormData): Promise<Acti
     client_id: str(fd, "client_id"),
   });
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true, message: "Task added." };
 }
 
@@ -34,7 +32,6 @@ export async function setTaskStatus(id: string, status: string): Promise<{ ok: b
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").update({ status }).eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }
 
@@ -43,6 +40,5 @@ export async function deleteTask(id: string): Promise<{ ok: boolean; error?: str
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }

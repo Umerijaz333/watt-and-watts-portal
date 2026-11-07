@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { CameraIcon } from "@/components/icons";
 import { useHydrated } from "@/lib/use-hydrated";
 
@@ -44,6 +45,7 @@ export function PhotoUpload({
   const [status, setStatus] = useState<"idle" | "uploading" | "saved">("idle");
   const [error, setError] = useState<string>();
   const ready = useHydrated();
+  const router = useRouter();
 
   useEffect(() => {
     if (!file) return setPreview(null);
@@ -73,6 +75,7 @@ export function PhotoUpload({
       setCaption("");
       if (inputRef.current) inputRef.current.value = "";
       onSaved?.();
+      router.refresh();
     } catch (e) {
       setStatus("idle");
       setError(e instanceof Error ? e.message : "Upload failed. Check your connection and try again.");

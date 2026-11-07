@@ -1,4 +1,5 @@
 "use client";
+import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
 import { useActionState } from "react";
 import { updateClientAction } from "@/app/actions/clients";
@@ -14,6 +15,7 @@ const FIELDS = [
 
 export function ClientDetailsForm({ client }: { client: Client }) {
   const [state, action] = useActionState(updateClientAction, null);
+  useRefreshOnSuccess(state);
   return (
     <form action={action} className="card space-y-3">
       <input type="hidden" name="id" value={client.id} />

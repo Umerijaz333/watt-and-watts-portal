@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import { useState, useTransition } from "react";
 import { setTaskStatus } from "@/app/actions/tasks";
@@ -9,6 +10,7 @@ export function TaskStatusSelect({ id, status, large = false }: { id: string; st
   const [value, setValue] = useState(status);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
+  const router = useRouter();
   const ready = useHydrated();
   return (
     <div className="shrink-0 text-right">
@@ -27,7 +29,7 @@ export function TaskStatusSelect({ id, status, large = false }: { id: string; st
             if (!res.ok) {
               setValue(prev);
               setError(res.error ?? "Could not update.");
-            }
+            } else router.refresh();
           });
         }}
       >

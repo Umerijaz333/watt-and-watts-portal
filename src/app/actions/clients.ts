@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -38,7 +37,6 @@ export async function createClientAction(_prev: ActionState, fd: FormData): Prom
     .select("id")
     .single();
   if (error || !data) return { ok: false, error: error ? errMsg(error) : "Could not create client." };
-  revalidatePath("/", "layout");
   redirect(`/clients/${data.id}`);
 }
 
@@ -57,7 +55,6 @@ export async function quickCreateClient(
     .select("id, name")
     .single();
   if (error || !data) return { ok: false, error: error ? errMsg(error) : "Could not create client." };
-  revalidatePath("/", "layout");
   return { ok: true, id: data.id, name: data.name };
 }
 
@@ -94,7 +91,6 @@ export async function updateClientAction(_prev: ActionState, fd: FormData): Prom
   const supabase = await createClient();
   const { error } = await supabase.from("clients").update(patch).eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true, message: "Saved." };
 }
 
@@ -111,6 +107,5 @@ export async function updateClientField(
   const supabase = await createClient();
   const { error } = await supabase.from("clients").update({ [field]: v }).eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
-  revalidatePath("/", "layout");
   return { ok: true };
 }

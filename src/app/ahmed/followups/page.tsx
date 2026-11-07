@@ -1,47 +1,68 @@
 import Link from "@/components/link";
 import { getDueClients, getLastNotes } from "@/lib/queries";
-import { daysFromToday, formatDate, formatDateTime, todayISO } from "@/lib/dates";
+import { daysFromToday, formatDate, relativeDay, shortDate, todayISO } from "@/lib/dates";
 import { FollowUpActions } from "@/components/followup-actions";
+import { Avatar } from "@/components/avatar";
 
 export default async function AhmedFollowups() {
   const today = todayISO();
   const due = await getDueClients(today);
   const last = await getLastNotes(due.map((c) => c.id));
+  const late = due.filter((c) => c.next_follow_up! < today).length;
+
   return (
-    <div className="space-y-4">
+    <div className="-mx-4 -my-5 min-h-[calc(100dvh-64px)] bg-[#eef2f8] px-4 py-5">
       <Link href="/ahmed" className="text-lg font-semibold text-link">← Home</Link>
-      <h1 className="text-3xl font-bold">Follow-ups today</h1>
+
+      <header className="mb-5 mt-3">
+        <h1 className="font-display text-3xl font-bold leading-tight text-navy">Who to call today</h1>
+        <p className="mt-1 text-xl">
+          {due.length === 0
+            ? "Nobody is waiting for a call."
+            : `${due.length} ${due.length === 1 ? "person" : "people"} to call${late ? ` · ${late} ${late === 1 ? "is" : "are"} late` : ""}`}
+        </p>
+      </header>
+
       {due.length === 0 ? (
-        <div className="card space-y-4 text-center">
-          <p className="text-2xl">Nothing due today.</p>
-          <Link href="/ahmed/note" className="btn-primary w-full py-4 text-xl">Add meeting note</Link>
+        <div className="space-y-4 rounded-3xl bg-surface p-6 text-center shadow-sm">
+          <p className="font-display text-2xl font-semibold text-navy">All clear for today.</p>
+          <p className="text-xl">Met someone new? Write it down while you remember.</p>
+          <Link href="/ahmed/note" className="press btn-primary w-full rounded-full py-4 text-xl">Add meeting note</Link>
         </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-5">
           {due.map((c) => {
             const days = daysFromToday(c.next_follow_up!);
             const note = last.get(c.id);
             return (
-              <li key={c.id} className="space-y-3 rounded-2xl border-2 border-line bg-surface p-4">
-                <Link href={`/ahmed/client/${c.id}`} className="block">
-                  <p className="text-2xl font-bold text-navy underline decoration-line underline-offset-4">{c.name}</p>
-                  {c.firm && <p className="text-lg">{c.firm}</p>}
-                  <p className={`mt-1 text-lg font-semibold ${days < 0 ? "text-overdue" : "text-due"}`}>
-                    {days < 0 ? `Overdue ${-days} day${days === -1 ? "" : "s"} (${formatDate(c.next_follow_up)})` : "Due today"}
-                  </p>
+              <li key={c.id} className="space-y-4 rounded-3xl bg-surface p-5 shadow-[0_2px_12px_rgba(20,32,90,0.08)]">
+                <Link href={`/ahmed/client/${c.id}`} className="flex items-start gap-4">
+                  <Avatar name={c.name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-2xl font-semibold leading-tight text-navy">{c.name}</p>
+                    {c.firm && <p className="text-lg leading-snug">{c.firm}</p>}
+                    <span
+                      className={`mt-1.5 inline-block rounded-full px-3 py-0.5 text-base font-semibold ${days < 0 ? "bg-overdue-tint text-overdue" : "bg-tint text-due"}`}
+                      title={formatDate(c.next_follow_up)}
+                    >
+                      {relativeDay(c.next_follow_up!)}
+                    </span>
+                  </div>
                 </Link>
-                <div className="rounded-xl bg-tint p-3 text-lg">
-                  <p className="text-base font-bold text-navy">Last time we spoke</p>
+
+                <div className="relative rounded-2xl rounded-tl-sm bg-paper p-4 text-lg">
                   {note ? (
                     <>
-                      <p className="line-clamp-3">{note.body}</p>
-                      <p className="text-base">{formatDateTime(note.created_at)} · {note.author}</p>
+                      <p className="text-base font-semibold text-navy">Last time you spoke</p>
+                      <p className="mt-1 line-clamp-3">“{note.body}”</p>
+                      <p className="mt-1 text-base">— {note.author}, {shortDate(note.created_at)}</p>
                     </>
                   ) : (
-                    <p>No notes yet.</p>
+                    <p>No notes yet. After the call, add what you talked about.</p>
                   )}
                 </div>
-                <FollowUpActions clientId={c.id} phone={c.phone} />
+
+                <FollowUpActions clientId={c.id} phone={c.phone} name={c.name} />
               </li>
             );
           })}

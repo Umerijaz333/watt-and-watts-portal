@@ -45,3 +45,14 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @utility input { @apply w-full rounded-lg border border-gray-400 bg-surface px-3 py-2.5 text-ink placeholder:text-muted focus:border-link focus:outline-none focus:ring-2 focus:ring-link/30; }
 @utility label { @apply mb-1 block text-sm font-semibold text-ink; }
 @utility badge { @apply inline-block rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs font-semibold text-muted; }
+
+/* Small, quick feedback animations (skipped when the user prefers reduced motion) */
+@keyframes pop-in { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes fade-up { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+@utility animate-pop { animation: pop-in 320ms ease-out both; }
+@utility animate-fade-up { animation: fade-up 260ms ease-out both; }
+@utility press { @apply transition-transform active:scale-[0.97]; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop, .animate-fade-up { animation: none; }
+  .press:active { transform: none; }
+}

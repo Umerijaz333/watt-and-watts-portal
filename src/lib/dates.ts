@@ -44,3 +44,18 @@ export function daysFromToday(iso: string): number {
   const d = Date.parse(iso.slice(0, 10) + "T00:00:00Z");
   return Math.round((d - t) / 86400000);
 }
+
+/** Friendly relative wording for a follow-up date: "Today", "Yesterday", "3 days late", "In 2 days". */
+export function relativeDay(iso: string): string {
+  const d = daysFromToday(iso);
+  if (d === 0) return "Today";
+  if (d === -1) return "1 day late";
+  if (d < 0) return `${-d} days late`;
+  if (d === 1) return "Tomorrow";
+  return `In ${d} days`;
+}
+
+/** "4 Nov" style short date for timestamps, in Asia/Karachi. */
+export function shortDate(ts: string): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(new Date(ts));
+}

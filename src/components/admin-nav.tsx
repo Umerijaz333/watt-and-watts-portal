@@ -2,7 +2,6 @@
 
 import Link from "@/components/link";
 import { usePathname } from "next/navigation";
-import { Logo } from "@/components/logo";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
@@ -16,8 +15,8 @@ export function AdminNav({ name }: { name: string }) {
   return (
     <header className="sticky top-0 z-10 bg-navy text-paper">
       <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2.5">
-        <Link href="/" className="mr-2 text-paper" aria-label="Watt & Watts home">
-          <Logo size={24} className="[&>span]:hidden sm:[&>span]:inline" />
+        <Link href="/" className="mr-2 font-display text-lg font-semibold text-paper">
+          Watt &amp; Watts
         </Link>
         <nav className="flex flex-1 gap-1">
           {LINKS.map((l) => (

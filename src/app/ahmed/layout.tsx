@@ -1,6 +1,5 @@
 import Link from "@/components/link";
 import { requireProfile } from "@/lib/auth";
-import { Logo } from "@/components/logo";
 
 export default async function AhmedLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile();
@@ -8,7 +7,6 @@ export default async function AhmedLayout({ children }: { children: React.ReactN
     <div className="mx-auto min-h-dvh max-w-lg text-xl text-ink">
       <header className="flex items-center justify-between bg-navy px-4 py-3 text-paper">
         <Link href="/ahmed" className="flex items-center gap-2 font-display font-bold text-paper">
-          <Logo size={26} wordmark={false} />
           <span>Home</span>
         </Link>
         <div className="flex items-center gap-1">

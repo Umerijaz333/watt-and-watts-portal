@@ -1,7 +1,8 @@
 import Link from "@/components/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTimeline } from "@/lib/queries";
+import { getTimeline, getLastNotes } from "@/lib/queries";
+import { LastSpoke } from "@/components/last-spoke";
 import { Timeline } from "@/components/timeline";
 import { ClientHeader } from "./client-header";
 import { ClientDetailsForm } from "./client-details-form";
@@ -14,10 +15,11 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClient();
-  const [{ data: client, error }, { data: reqs }, timeline] = await Promise.all([
+  const [{ data: client, error }, { data: reqs }, timeline, last] = await Promise.all([
     supabase.from("clients").select("*").eq("id", id).maybeSingle(),
     supabase.from("client_requirements").select("*").eq("client_id", id).order("created_at"),
     getTimeline(id),
+    getLastNotes([id]),
   ]);
   if (error) throw error;
   if (!client) notFound();
@@ -27,6 +29,7 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
     <div className="space-y-6">
       <Link href="/clients" className="text-sm font-semibold text-link">← Clients</Link>
       <ClientHeader client={c} />
+      <LastSpoke note={last.get(c.id)} pending={c.pending_from_client} />
 
       <section>
         <h2 className="mb-2 text-lg font-bold">Conversation status</h2>

@@ -3,7 +3,7 @@ import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
 import { useActionState, useRef } from "react";
 import { createTask } from "@/app/actions/tasks";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Profile } from "@/lib/types";
 
 export function TaskForm({
@@ -17,7 +17,7 @@ export function TaskForm({
   currentUserId: string;
   simple?: boolean;
 }) {
-  const [state, action] = useActionState(createTask, null);
+  const [state, action, pending] = useActionState(createTask, null);
   const formRef = useRef<HTMLFormElement>(null);
   useRefreshOnSuccess(state, () => formRef.current?.reset());
 
@@ -25,7 +25,7 @@ export function TaskForm({
   const inp = `input ${simple ? "py-4 text-xl" : ""}`;
 
   return (
-    <form ref={formRef} action={action} className={`card space-y-3 ${simple ? "text-xl" : ""}`}>
+    <ActionForm ref={formRef} action={action} pending={pending} className={`card space-y-3 ${simple ? "text-xl" : ""}`}>
       <div>
         <label className={lbl} htmlFor="task-title">Task *</label>
         <input id="task-title" name="title" required className={inp} />
@@ -61,6 +61,6 @@ export function TaskForm({
       <SubmitButton className={`btn-primary ${simple ? "w-full py-5 text-2xl" : ""}`} pendingText="Adding…">
         {simple ? "Save task" : "+ Add task"}
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

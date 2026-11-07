@@ -44,4 +44,6 @@ export type Task = {
 };
 
 /** Result shape for every server action used with useActionState. */
-export type ActionState = { ok: boolean; error?: string; message?: string } | null;
+export type Duplicate = { id: string; name: string; firm: string | null; phone: string | null };
+
+export type ActionState = { ok: boolean; error?: string; message?: string; duplicate?: Duplicate } | null;

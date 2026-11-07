@@ -11,7 +11,7 @@ export default async function AhmedLayout({ children }: { children: React.ReactN
         </Link>
         <div className="flex items-center gap-1">
           {profile.role === "admin" && (
-            <Link href="/" className="rounded-lg px-3 py-2 text-base font-semibold text-paper">Admin</Link>
+            <a href="/view?mode=full" className="rounded-lg px-3 py-2 text-base font-semibold text-paper">Full view</a>
           )}
           <form action="/auth/signout" method="post">
             <button className="rounded-lg px-3 py-2 text-base font-semibold text-paper">Sign out</button>

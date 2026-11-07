@@ -2,24 +2,25 @@
 import { useRefreshOnSuccess } from "@/lib/use-refresh";
 import { useRouter } from "next/navigation";
 import { PhoneIcon } from "@/components/icons";
+import { whatsappHref } from "@/lib/phone";
 import { useHydrated } from "@/lib/use-hydrated";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { updateClientAction, updateClientField } from "@/app/actions/clients";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import { CLIENT_TYPES, STAGES, typeLabel } from "@/lib/constants";
 import { formatDate, todayISO } from "@/lib/dates";
 import type { Client } from "@/lib/types";
 
 export function ClientHeader({ client }: { client: Client }) {
   const [editing, setEditing] = useState(false);
-  const [state, action] = useActionState(updateClientAction, null);
+  const [state, action, pending] = useActionState(updateClientAction, null);
   useRefreshOnSuccess(state, () => setEditing(false));
 
   return (
     <div className="card space-y-4">
       {editing ? (
-        <form action={action} className="space-y-3">
+        <ActionForm action={action} pending={pending} className="space-y-3">
           <input type="hidden" name="id" value={client.id} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field name="name" label="Name *" value={client.name} required />
@@ -39,7 +40,7 @@ export function ClientHeader({ client }: { client: Client }) {
             <SubmitButton>Save</SubmitButton>
             <button type="button" className="btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
           </div>
-        </form>
+        </ActionForm>
       ) : (
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -54,6 +55,9 @@ export function ClientHeader({ client }: { client: Client }) {
                 </a>
               ) : (
                 <span className="text-sm text-muted">No phone saved</span>
+              )}
+              {client.phone && whatsappHref(client.phone) && (
+                <a href={whatsappHref(client.phone)!} target="_blank" rel="noreferrer" className="btn py-2 bg-done text-white hover:opacity-90">WhatsApp</a>
               )}
               {client.email && <a href={`mailto:${client.email}`} className="btn-secondary py-2">{client.email}</a>}
             </div>

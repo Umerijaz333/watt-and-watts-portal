@@ -30,7 +30,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         await supabase.auth.signOut();
         return;
       }
-      router.replace(profile.role === "simple" ? "/ahmed" : "/");
+      router.replace("/"); // the dashboard sends simple-view users on to /ahmed
       router.refresh();
     } catch {
       setError("Network error. Check your connection and try again.");

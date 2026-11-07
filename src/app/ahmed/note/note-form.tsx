@@ -3,24 +3,13 @@
 import { useActionState, useState } from "react";
 import { addNote } from "@/app/actions/notes";
 import { ClientPicker, type ClientOption } from "@/components/client-picker";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import { DoneScreen } from "../done-screen";
 import { formatDate, todayISO } from "@/lib/dates";
-
-function plusDays(n: number) {
-  const d = new Date(todayISO() + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
-const QUICK = [
-  { label: "Tomorrow", days: 1 },
-  { label: "3 days", days: 3 },
-  { label: "1 week", days: 7 },
-];
+import { QUICK_DATES, plusDays } from "@/lib/date-options";
 
 export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOption[]; initialClientId: string | null }) {
-  const [state, action] = useActionState(addNote, null);
+  const [state, action, pending] = useActionState(addNote, null);
   const [clientId, setClientId] = useState<string | null>(initialClientId);
   const [date, setDate] = useState("");
   const [clientError, setClientError] = useState<string>();
@@ -35,8 +24,8 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
     );
 
   return (
-    <form
-      action={action}
+    <ActionForm
+      action={action} pending={pending}
       onSubmit={(e) => {
         if (!clientId) {
           e.preventDefault();
@@ -65,27 +54,29 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
 
       <div>
         <label htmlFor="follow" className="mb-2 block text-xl font-bold">4. Next follow-up date *</label>
-        <div className="mb-2 grid grid-cols-3 gap-2">
-          {QUICK.map((q) => {
+        <div className="mb-3 grid grid-cols-2 gap-2 min-[400px]:grid-cols-3">
+          {QUICK_DATES.map((q) => {
             const v = plusDays(q.days);
             return (
               <button
                 key={q.label}
                 type="button"
                 onClick={() => setDate(v)}
-                className={`rounded-xl border-2 py-3 text-lg font-semibold ${date === v ? "border-link bg-tint text-navy" : "border-gray-400 bg-white"}`}
+                aria-pressed={date === v}
+                className={`rounded-xl border-2 py-4 text-xl font-semibold ${date === v ? "border-link bg-tint text-navy" : "border-gray-400 bg-white"}`}
               >
                 {q.label}
               </button>
             );
           })}
         </div>
+        <label htmlFor="follow" className="mb-1 block text-lg">Or pick another date:</label>
         <input id="follow" name="next_follow_up" type="date" required min={todayISO()} value={date} onChange={(e) => setDate(e.target.value)} className="input py-4 text-xl" />
-        {date && <p className="mt-1 text-lg">{formatDate(date)}</p>}
+        {date && <p className="mt-2 rounded-lg bg-tint p-2 text-xl font-semibold text-navy">Follow-up: {formatDate(date)}</p>}
       </div>
 
       <FormMessage state={state} large />
       <SubmitButton className="btn-primary w-full py-5 text-2xl">Save note</SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

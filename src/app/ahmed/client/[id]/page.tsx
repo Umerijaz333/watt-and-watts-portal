@@ -1,8 +1,10 @@
 import Link from "@/components/link";
-import { NoteIcon, PhoneIcon } from "@/components/icons";
+import { NoteIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTimeline } from "@/lib/queries";
+import { getTimeline, getLastNotes } from "@/lib/queries";
+import { LastSpoke } from "@/components/last-spoke";
+import { FollowUpActions } from "@/components/followup-actions";
 import { Timeline } from "@/components/timeline";
 import { formatDate } from "@/lib/dates";
 import { stageLabel } from "@/lib/constants";
@@ -12,9 +14,10 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClient();
-  const [{ data: c, error }, timeline] = await Promise.all([
+  const [{ data: c, error }, timeline, last] = await Promise.all([
     supabase.from("clients").select("*").eq("id", id).maybeSingle(),
     getTimeline(id, 5),
+    getLastNotes([id]),
   ]);
   if (error) throw error;
   if (!c) notFound();
@@ -24,7 +27,6 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
     ["Stage", stageLabel(c.stage)],
     ["Discussed so far", c.discussed_summary],
     ["Next to discuss", c.next_to_discuss],
-    ["Pending from client", c.pending_from_client],
     ["Pending from us", c.pending_from_us],
   ];
 
@@ -39,10 +41,10 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
 
       <div className="grid gap-3">
         <Link href={`/ahmed/note?client=${c.id}`} className="btn-primary w-full py-5 text-2xl"><NoteIcon size={28} /> Add note</Link>
-        {c.phone && (
-          <a href={`tel:${c.phone.replace(/[^\d+]/g, "")}`} className="btn-secondary w-full border-2 py-4 text-xl"><PhoneIcon size={26} /> Call {c.phone}</a>
-        )}
       </div>
+
+      <LastSpoke note={last.get(c.id)} pending={c.pending_from_client} large />
+      <FollowUpActions clientId={c.id} phone={c.phone} />
 
       <dl className="card space-y-3">
         {rows.map(([k, v]) => (

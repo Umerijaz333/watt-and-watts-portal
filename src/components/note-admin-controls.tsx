@@ -5,7 +5,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateNote, deleteNote } from "@/app/actions/notes";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import type { TimelineItem } from "@/lib/queries";
 import { formatDate } from "@/lib/dates";
 
@@ -14,7 +14,7 @@ type Note = Extract<TimelineItem, { kind: "note" }>;
 export function NoteAdminControls({ note }: { note: Note }) {
   const ready = useHydrated();
   const [editing, setEditing] = useState(false);
-  const [state, action] = useActionState(updateNote, null);
+  const [state, action, pending] = useActionState(updateNote, null);
   const [deleting, startDelete] = useTransition();
   const [deleteError, setDeleteError] = useState<string>();
 
@@ -23,7 +23,7 @@ export function NoteAdminControls({ note }: { note: Note }) {
 
   if (editing)
     return (
-      <form action={action} className="space-y-3">
+      <ActionForm action={action} pending={pending} className="space-y-3">
         <input type="hidden" name="id" value={note.id} />
         <textarea name="body" defaultValue={note.body} required rows={4} className="input" aria-label="Note" />
         <div className="grid gap-3 sm:grid-cols-2">
@@ -42,7 +42,7 @@ export function NoteAdminControls({ note }: { note: Note }) {
           <SubmitButton>Save</SubmitButton>
           <button type="button" disabled={!ready} className="btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
         </div>
-      </form>
+      </ActionForm>
     );
 
   return (

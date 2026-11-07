@@ -99,3 +99,81 @@ export async function getDueClients(today: string) {
   if (error) throw error;
   return data ?? [];
 }
+
+/** Most recent note per client, for "last time we spoke" summaries. */
+export async function getLastNotes(clientIds: string[]) {
+  const map = new Map<string, { body: string; created_at: string; author: string }>();
+  if (!clientIds.length) return map;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("notes")
+    .select("client_id, body, created_at, author:profiles(name)")
+    .in("client_id", clientIds)
+    .not("body", "like", "Follow-up moved to %")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  for (const n of data ?? []) {
+    if (!map.has(n.client_id)) map.set(n.client_id, { body: n.body, created_at: n.created_at, author: nameOf(n.author as Named) });
+  }
+  return map;
+}
+
+export type InboxItem = {
+  kind: "note" | "photo" | "client";
+  id: string;
+  created_at: string;
+  author: string;
+  client: { id: string; name: string } | null;
+  text: string;
+};
+
+/**
+ * Notes, photos and new clients added by other people that have not been reviewed yet.
+ * Returns `missingColumn: true` if the review-inbox migration has not been run.
+ */
+export async function getInbox(meId: string): Promise<{ items: InboxItem[]; missingColumn: boolean; error?: string }> {
+  const supabase = await createClient();
+  const one = <T,>(v: T | T[] | null) => (Array.isArray(v) ? v[0] : v) ?? null;
+  const [notes, photos, clients] = await Promise.all([
+    supabase
+      .from("notes")
+      .select("id, body, created_at, author:profiles(name), client:clients(id, name)")
+      .is("reviewed_at", null)
+      .neq("created_by", meId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("note_photos")
+      .select("id, caption, created_at, author:profiles(name), client:clients(id, name)")
+      .is("reviewed_at", null)
+      .neq("created_by", meId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("clients")
+      .select("id, name, firm, phone, created_at, author:profiles(name)")
+      .is("reviewed_at", null)
+      .neq("created_by", meId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  const err = notes.error ?? photos.error ?? clients.error;
+  if (err) return { items: [], missingColumn: err.code === "42703" || /reviewed_at/.test(err.message), error: err.message };
+
+  const items: InboxItem[] = [
+    ...(notes.data ?? []).map((n) => ({
+      kind: "note" as const, id: n.id, created_at: n.created_at, author: nameOf(n.author as Named),
+      client: one(n.client as unknown as { id: string; name: string } | null), text: n.body,
+    })),
+    ...(photos.data ?? []).map((p) => ({
+      kind: "photo" as const, id: p.id, created_at: p.created_at, author: nameOf(p.author as Named),
+      client: one(p.client as unknown as { id: string; name: string } | null), text: p.caption ? `Photo: ${p.caption}` : "Photo of notes",
+    })),
+    ...(clients.data ?? []).map((c) => ({
+      kind: "client" as const, id: c.id, created_at: c.created_at, author: nameOf(c.author as Named),
+      client: { id: c.id, name: c.name }, text: `New client${c.firm ? ` · ${c.firm}` : ""}${c.phone ? ` · ${c.phone}` : ""}`,
+    })),
+  ];
+  items.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return { items, missingColumn: false };
+}

@@ -23,6 +23,7 @@ export function ClientPicker({
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [error, setError] = useState<string>();
+  const [dup, setDup] = useState<{ id: string; name: string; firm: string | null; phone: string | null } | null>(null);
   const [pending, start] = useTransition();
 
   const selected = clients.find((c) => c.id === value) ?? null;
@@ -57,6 +58,48 @@ export function ClientPicker({
           <input id="new-client-phone" type="tel" inputMode="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="input py-4 text-xl" />
         </div>
         {error && <p role="alert" className="rounded-lg bg-overdue-tint p-3 text-xl font-medium text-overdue">{error}</p>}
+        {dup && (
+          <div role="alert" className="space-y-3 rounded-xl border-2 border-btn bg-tint p-4">
+            <p className="text-xl font-bold text-navy">Already saved?</p>
+            <p className="text-xl">
+              <strong>{dup.name}</strong>
+              {dup.firm ? ` · ${dup.firm}` : ""}
+              {dup.phone ? ` · ${dup.phone}` : ""}
+            </p>
+            <button
+              type="button"
+              className="btn-primary w-full py-4 text-xl"
+              onClick={() => {
+                if (!clients.some((c) => c.id === dup.id)) setClients((prev) => [{ id: dup.id, name: dup.name, firm: dup.firm }, ...prev]);
+                setCreating(false);
+                setDup(null);
+                onChange(dup.id);
+              }}
+            >
+              Yes, use {dup.name}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              className="btn-secondary w-full py-4 text-xl"
+              onClick={() =>
+                start(async () => {
+                  const res = await quickCreateClient(newName, newPhone, true);
+                  if (!res.ok) return setError(res.error);
+                  const c = { id: res.id, name: res.name, firm: null };
+                  setClients((prev) => [c, ...prev]);
+                  setCreating(false);
+                  setDup(null);
+                  setNewName("");
+                  setNewPhone("");
+                  onChange(c.id);
+                })
+              }
+            >
+              No, it&apos;s a different client
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             type="button"
@@ -65,9 +108,10 @@ export function ClientPicker({
             onClick={() => {
               setError(undefined);
               if (!newName.trim()) return setError("Please enter the client's name.");
+              setDup(null);
               start(async () => {
                 const res = await quickCreateClient(newName, newPhone);
-                if (!res.ok) return setError(res.error);
+                if (!res.ok) return res.duplicate ? setDup(res.duplicate) : setError(res.error);
                 const c = { id: res.id, name: res.name, firm: null };
                 setClients((prev) => [c, ...prev]);
                 setCreating(false);

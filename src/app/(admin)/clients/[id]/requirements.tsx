@@ -5,7 +5,7 @@ import { useActionState, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useRefreshOnSuccess } from "@/lib/use-refresh";
 import { saveRequirement, deleteRequirement } from "@/app/actions/requirements";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Requirement } from "@/lib/types";
 
 export function Requirements({ clientId, rows }: { clientId: string; rows: Requirement[] }) {
@@ -26,7 +26,7 @@ export function Requirements({ clientId, rows }: { clientId: string; rows: Requi
 function RequirementRow({ row }: { row: Requirement }) {
   const ready = useHydrated();
   const [editing, setEditing] = useState(false);
-  const [state, action] = useActionState(saveRequirement, null);
+  const [state, action, pending] = useActionState(saveRequirement, null);
   const [deleting, startDelete] = useTransition();
   const [err, setErr] = useState<string>();
   useRefreshOnSuccess(state, () => setEditing(false));
@@ -35,7 +35,7 @@ function RequirementRow({ row }: { row: Requirement }) {
   if (editing)
     return (
       <li className="p-3">
-        <form action={action} className="space-y-2">
+        <ActionForm action={action} pending={pending} className="space-y-2">
           <input type="hidden" name="id" value={row.id} />
           <RequirementInputs row={row} />
           <FormMessage state={state} />
@@ -43,7 +43,7 @@ function RequirementRow({ row }: { row: Requirement }) {
             <SubmitButton className="btn-primary py-1.5 text-sm">Save</SubmitButton>
             <button type="button" disabled={!ready} className="btn-secondary py-1.5 text-sm" onClick={() => setEditing(false)}>Cancel</button>
           </div>
-        </form>
+        </ActionForm>
       </li>
     );
 
@@ -90,15 +90,15 @@ function RequirementInputs({ row }: { row?: Requirement }) {
 
 function AddRequirement({ clientId }: { clientId: string }) {
   const ready = useHydrated();
-  const [state, action] = useActionState(saveRequirement, null);
+  const [state, action, pending] = useActionState(saveRequirement, null);
   const formRef = useRef<HTMLFormElement>(null);
   useRefreshOnSuccess(state, () => formRef.current?.reset());
   return (
-    <form ref={formRef} action={action} className="card space-y-2">
+    <ActionForm ref={formRef} action={action} pending={pending} className="card space-y-2">
       <input type="hidden" name="client_id" value={clientId} />
       <RequirementInputs />
       <FormMessage state={state} />
       <SubmitButton className="btn-secondary" pendingText="Adding…">+ Add requirement</SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

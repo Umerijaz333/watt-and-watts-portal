@@ -1,16 +1,21 @@
 import Link from "@/components/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { VIEW_COOKIE, prefersSimple } from "@/lib/view";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getDueClients } from "@/lib/queries";
+import { getDueClients, getInbox } from "@/lib/queries";
+import { ReviewInbox } from "@/components/review-inbox";
 import { formatDate, todayISO, daysFromToday } from "@/lib/dates";
 import { StageChip } from "@/components/stage-chip";
 import { TaskStatusSelect } from "@/components/task-status-select";
 
 export default async function Dashboard() {
   const profile = await requireAdmin();
+  if (prefersSimple(profile, (await cookies()).get(VIEW_COOKIE)?.value)) redirect("/ahmed");
   const today = todayISO();
   const supabase = await createClient();
-  const [due, { data: myTasks, error: taskErr }] = await Promise.all([
+  const [due, { data: myTasks, error: taskErr }, inbox] = await Promise.all([
     getDueClients(today),
     supabase
       .from("tasks")
@@ -19,6 +24,7 @@ export default async function Dashboard() {
       .neq("status", "done")
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(10),
+    getInbox(profile.id),
   ]);
   const overdue = due.filter((c) => c.next_follow_up! < today);
   const dueToday = due.filter((c) => c.next_follow_up === today);
@@ -31,8 +37,26 @@ export default async function Dashboard() {
           <h1 className="text-2xl font-bold">Follow-ups</h1>
           <p className="text-muted">Today is {formatDate(today)}</p>
         </div>
-        <Link href="/clients/new" className="btn-primary">+ Add client</Link>
+        <div className="flex items-center gap-3">
+          <a href="/view?mode=simple" className="text-sm font-semibold text-link underline sm:hidden">Simple view</a>
+          <Link href="/clients/new" className="btn-primary">+ Add client</Link>
+        </div>
       </div>
+
+      <section>
+        <h2 className="mb-2 text-lg font-bold text-navy">
+          New to review <span className="text-muted">({inbox.items.length})</span>
+        </h2>
+        {inbox.missingColumn ? (
+          <p role="alert" className="card text-overdue">
+            The review inbox needs a one-time database update: run <code>supabase/migrations/20261108000000_review_inbox.sql</code> in the Supabase SQL Editor.
+          </p>
+        ) : inbox.error ? (
+          <p role="alert" className="card text-overdue">Could not load new items: {inbox.error}</p>
+        ) : (
+          <ReviewInbox items={inbox.items} />
+        )}
+      </section>
 
       <FollowUpList title="Overdue" tone="red" rows={overdue} empty="Nothing overdue. Well done." today={today} />
       <FollowUpList title="Due today" tone="blue" rows={dueToday} empty="No follow-ups due today." today={today} />

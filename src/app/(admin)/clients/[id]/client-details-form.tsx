@@ -3,7 +3,7 @@ import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
 import { useActionState } from "react";
 import { updateClientAction } from "@/app/actions/clients";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Client } from "@/lib/types";
 
 const FIELDS = [
@@ -14,10 +14,10 @@ const FIELDS = [
 ] as const;
 
 export function ClientDetailsForm({ client }: { client: Client }) {
-  const [state, action] = useActionState(updateClientAction, null);
+  const [state, action, pending] = useActionState(updateClientAction, null);
   useRefreshOnSuccess(state);
   return (
-    <form action={action} className="card space-y-3">
+    <ActionForm action={action} pending={pending} className="card space-y-3">
       <input type="hidden" name="id" value={client.id} />
       {/* key refreshes defaults after server revalidation (e.g. a note updated pending_from_client) */}
       <div key={client.updated_at} className="grid gap-3 md:grid-cols-2">
@@ -30,6 +30,6 @@ export function ClientDetailsForm({ client }: { client: Client }) {
       </div>
       <FormMessage state={state} />
       <SubmitButton>Save changes</SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

@@ -1,8 +1,41 @@
 "use client";
 
+import { createContext, useContext, useTransition, type ComponentProps } from "react";
 import { useFormStatus } from "react-dom";
 import { useHydrated } from "@/lib/use-hydrated";
 import type { ActionState } from "@/lib/types";
+
+const PendingContext = createContext<boolean | null>(null);
+
+/**
+ * Form that submits a useActionState action without React's automatic form reset,
+ * so typed text is kept when a save fails. Forms reset themselves on success instead.
+ */
+export function ActionForm({
+  action,
+  pending,
+  onSubmit,
+  children,
+  ...rest
+}: Omit<ComponentProps<"form">, "action"> & { action: (fd: FormData) => void; pending: boolean }) {
+  const [, start] = useTransition();
+  return (
+    <PendingContext.Provider value={pending}>
+      <form
+        {...rest}
+        onSubmit={(e) => {
+          onSubmit?.(e);
+          if (e.defaultPrevented) return;
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          start(() => action(fd));
+        }}
+      >
+        {children}
+      </form>
+    </PendingContext.Provider>
+  );
+}
 
 export function SubmitButton({
   children,
@@ -13,7 +46,9 @@ export function SubmitButton({
   pendingText?: string;
   className?: string;
 }) {
-  const { pending } = useFormStatus();
+  const fromContext = useContext(PendingContext);
+  const { pending: fromForm } = useFormStatus();
+  const pending = fromContext ?? fromForm;
   const ready = useHydrated();
   return (
     <button type="submit" disabled={pending || !ready} className={className} aria-busy={pending || !ready}>

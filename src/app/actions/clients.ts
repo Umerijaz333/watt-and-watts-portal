@@ -5,7 +5,21 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
 import { STAGES, CLIENT_TYPES } from "@/lib/constants";
-import type { ActionState } from "@/lib/types";
+import type { ActionState, Duplicate } from "@/lib/types";
+import { phoneKey } from "@/lib/phone";
+
+const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+
+/** An existing client with the same name or phone number, if any. */
+async function findDuplicate(name: string, phone: string | null): Promise<Duplicate | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("clients").select("id, name, firm, phone");
+  const n = norm(name);
+  const p = phoneKey(phone);
+  return (
+    (data ?? []).find((c) => norm(c.name) === n || (p.length >= 7 && phoneKey(c.phone) === p)) ?? null
+  );
+}
 
 const stageValues = STAGES.map((s) => s.value) as string[];
 const typeValues = CLIENT_TYPES.map((s) => s.value) as string[];
@@ -20,6 +34,11 @@ export async function createClientAction(_prev: ActionState, fd: FormData): Prom
   const followUp = str(fd, "next_follow_up");
   if (!typeValues.includes(type) || !stageValues.includes(stage)) return { ok: false, error: "Invalid type or stage." };
   if (followUp && !isISODate(followUp)) return { ok: false, error: "Invalid follow-up date." };
+
+  if (fd.get("force") !== "1") {
+    const dup = await findDuplicate(name, str(fd, "phone"));
+    if (dup) return { ok: false, error: "This client may already exist.", duplicate: dup };
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -44,10 +63,15 @@ export async function createClientAction(_prev: ActionState, fd: FormData): Prom
 export async function quickCreateClient(
   name: string,
   phone: string,
-): Promise<{ ok: true; id: string; name: string } | { ok: false; error: string }> {
+  force = false,
+): Promise<{ ok: true; id: string; name: string } | { ok: false; error: string; duplicate?: Duplicate }> {
   await requireProfile();
   const n = name.trim();
   if (!n) return { ok: false, error: "Please enter the client's name." };
+  if (!force) {
+    const dup = await findDuplicate(n, phone);
+    if (dup) return { ok: false, error: "This client may already be saved.", duplicate: dup };
+  }
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clients")
@@ -107,5 +131,26 @@ export async function updateClientField(
   const supabase = await createClient();
   const { error } = await supabase.from("clients").update({ [field]: v }).eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };
+  return { ok: true };
+}
+
+/**
+ * One-tap "move follow-up" from the follow-ups list. Also records a short note so
+ * the history shows who moved it and when.
+ */
+export async function snoozeFollowUp(
+  clientId: string,
+  date: string,
+  label: string,
+): Promise<{ ok: boolean; error?: string }> {
+  await requireProfile();
+  if (!isISODate(date)) return { ok: false, error: "Invalid date." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("clients").update({ next_follow_up: date }).eq("id", clientId);
+  if (error) return { ok: false, error: errMsg(error) };
+  const { error: nErr } = await supabase
+    .from("notes")
+    .insert({ client_id: clientId, body: `Follow-up moved to ${label}.`, next_follow_up: date });
+  if (nErr) return { ok: false, error: `Date moved, but the history note failed: ${errMsg(nErr)}` };
   return { ok: true };
 }

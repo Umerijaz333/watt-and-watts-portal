@@ -3,15 +3,15 @@ import { useRefreshOnSuccess } from "@/lib/use-refresh";
 
 import { useActionState, useRef } from "react";
 import { addNote } from "@/app/actions/notes";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 
 export function AddNoteForm({ clientId }: { clientId: string }) {
-  const [state, action] = useActionState(addNote, null);
+  const [state, action, pending] = useActionState(addNote, null);
   const formRef = useRef<HTMLFormElement>(null);
   useRefreshOnSuccess(state, () => formRef.current?.reset());
 
   return (
-    <form ref={formRef} action={action} className="card space-y-3">
+    <ActionForm ref={formRef} action={action} pending={pending} className="card space-y-3">
       <input type="hidden" name="client_id" value={clientId} />
       <div>
         <label className="label" htmlFor="note-body">What was discussed *</label>
@@ -28,6 +28,6 @@ export function AddNoteForm({ clientId }: { clientId: string }) {
       </div>
       <FormMessage state={state} />
       <SubmitButton>Save note</SubmitButton>
-    </form>
+    </ActionForm>
   );
 }

@@ -30,6 +30,7 @@ export function AdminNav({ name }: { name: string }) {
             </Link>
           ))}
         </nav>
+        <a href="/view?mode=simple" className="hidden whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold text-paper/85 hover:bg-white/10 sm:inline">Simple view</a>
         <form action="/auth/signout" method="post" className="flex items-center gap-2">
           <span className="hidden text-sm text-paper/85 sm:inline">{name}</span>
           <button className="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold text-paper hover:bg-white/10 sm:px-3">Sign out</button>

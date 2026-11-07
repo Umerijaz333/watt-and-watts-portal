@@ -96,7 +96,7 @@ function FollowUpList({ title, tone, rows, empty, today }: { title: string; tone
                     <p className="truncate font-semibold">{c.name}</p>
                     <p className="truncate text-sm text-muted">{c.firm ?? "No firm"}</p>
                   </div>
-                  <StageChip stage={c.stage} className="hidden sm:inline-block" />
+                  <span className="hidden sm:inline"><StageChip stage={c.stage} /></span>
                   <div className="text-right text-sm">
                     <p className={`font-semibold ${color}`}>{formatDate(c.next_follow_up)}</p>
                     <p className={`text-xs font-semibold ${color}`}>{c.next_follow_up && c.next_follow_up < today ? `Overdue · ${-days} day${days === -1 ? "" : "s"}` : label}</p>

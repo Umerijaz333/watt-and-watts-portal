@@ -13,7 +13,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const me = await requireAdmin();
   const { filter = "all" } = await searchParams;
   const [profiles, clients] = await Promise.all([getProfiles(), getClientOptions()]);
-  const ahmed = profiles.find((p) => p.role === "simple");
+  // Match by name so the filter keeps working whatever Ahmed's role is.
+  const ahmed = profiles.find((p) => p.name.trim().toLowerCase() === "ahmed") ?? profiles.find((p) => p.role === "simple");
 
   const supabase = await createClient();
   let q = supabase

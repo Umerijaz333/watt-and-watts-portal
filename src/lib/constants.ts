@@ -1,4 +1,5 @@
 export const STAGES = [
+  { value: "not_contacted", label: "Not contacted" },
   { value: "first_contact", label: "First contact" },
   { value: "meeting_done", label: "Meeting done" },
   { value: "quotation_sent", label: "Quotation sent" },

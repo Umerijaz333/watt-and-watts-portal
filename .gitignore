@@ -8,3 +8,7 @@ next-env.d.ts
 .vercel
 supabase/.branches
 supabase/.temp
+
+# Architect directory: personal names and phone numbers. Never commit.
+/data/*
+!/data/README.md

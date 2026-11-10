@@ -2,6 +2,7 @@ import { stageLabel } from "@/lib/constants";
 
 /** Pipeline stage chips in shades of navy, blue and grey only. */
 const STYLES: Record<string, string> = {
+  not_contacted: "bg-surface text-muted border-line",
   first_contact: "bg-[#eceef2] text-[#3c4250] border-[#d5d9e1]",
   meeting_done: "bg-tint text-link border-tint-strong",
   quotation_sent: "bg-tint-strong text-navy border-[#c3d4ef]",

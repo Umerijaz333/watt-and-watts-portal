@@ -8,7 +8,15 @@ import { DoneScreen } from "../done-screen";
 import { formatDate, todayISO } from "@/lib/dates";
 import { QUICK_DATES, plusDays } from "@/lib/date-options";
 
-export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOption[]; initialClientId: string | null }) {
+export function AhmedNoteForm({
+  clients,
+  initialClientId,
+  meetingId = null,
+}: {
+  clients: ClientOption[];
+  initialClientId: string | null;
+  meetingId?: string | null;
+}) {
   const [state, action, pending] = useActionState(addNote, null);
   const [clientId, setClientId] = useState<string | null>(initialClientId);
   const [date, setDate] = useState("");
@@ -36,6 +44,7 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
       className="space-y-6"
     >
       <input type="hidden" name="require_follow_up" value="1" />
+      {meetingId && <input type="hidden" name="meeting_id" value={meetingId} />}
 
       <fieldset>
         <legend className="mb-2 text-xl font-bold text-navy">1. Who did you meet?</legend>

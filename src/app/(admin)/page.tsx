@@ -8,6 +8,8 @@ import { getDueClients, getInbox } from "@/lib/queries";
 import { ReviewInbox } from "@/components/review-inbox";
 import { formatDate, todayISO, daysFromToday, greeting, todayLong, relativeDay } from "@/lib/dates";
 import { Avatar } from "@/components/avatar";
+import { WeekProgress } from "@/components/week-progress";
+import { getWeekMeetings, weekRange, weekProgress, karachiWeekday, meetingWhen, WEEKLY_TARGET } from "@/lib/outreach";
 import { StageChip } from "@/components/stage-chip";
 import { TaskStatusSelect } from "@/components/task-status-select";
 
@@ -18,7 +20,8 @@ export default async function Dashboard() {
   const supabase = await createClient();
   const userId = await getUserId(); // from the session token, no database trip
   // Profile, follow-ups, tasks and the review inbox all load at the same time.
-  const [profile, due, { data: myTasks, error: taskErr }, inbox] = await Promise.all([
+  const range = weekRange();
+  const [profile, due, { data: myTasks, error: taskErr }, inbox, week] = await Promise.all([
     requireAdmin(),
     getDueClients(today),
     supabase
@@ -29,6 +32,7 @@ export default async function Dashboard() {
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(10),
     getInbox(userId),
+    getWeekMeetings(range),
   ]);
   // First visit on Ahmed's phone: remember the simple view on this device, then go there.
   if (prefersSimple(profile, viewCookie)) redirect("/view?mode=simple");
@@ -57,18 +61,48 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-navy p-5 text-paper shadow-soft">
-        <p className="font-display text-xl font-semibold">
-          {summary.length ? summary.join(" · ") : "All clear. Nobody to call today."}
+      {week.missingTable ? (
+        <p role="alert" className="card text-overdue">
+          Weekly meetings need a one-time database update: run <code>supabase/migrations/20261111000000_directory.sql</code> in the Supabase SQL Editor.
         </p>
-        <p className="mt-1 text-paper/80">
-          {overdue.length
-            ? "Start with the late ones below."
-            : due.length
-              ? "Everyone below is due today."
-              : "A good day to add notes from recent meetings."}
-        </p>
-      </div>
+      ) : (
+        <section className="space-y-3">
+          <WeekProgress {...weekProgress(week.meetings, range)} start={range.start} end={range.end} />
+          {week.meetings.filter((m) => m.needs_reschedule).map((m) => (
+            <Link key={m.id} href="/plan" role="alert" className="card block border-l-4 border-overdue">
+              <span className="font-semibold text-overdue">Ahmed can&apos;t make it:</span> {m.client?.name} ({meetingWhen(m.scheduled_for, m.scheduled_time)}). Tap to reschedule.
+            </Link>
+          ))}
+          {(() => {
+            const lined = week.meetings.filter((m) => (m.status === "planned" || m.status === "done") && m.scheduled_for >= range.start && m.scheduled_for <= range.end).length;
+            return karachiWeekday() >= 3 && lined < WEEKLY_TARGET ? (
+              <Link href="/plan?suggest=1" className="card flex items-center justify-between gap-3 border-l-4 border-btn">
+                <span><strong className="text-navy">Plan this week&apos;s meetings.</strong> Only {lined} of {WEEKLY_TARGET} lined up and it&apos;s already {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][karachiWeekday()]}.</span>
+                <span className="btn-primary shrink-0">Plan now</span>
+              </Link>
+            ) : null;
+          })()}
+          {week.meetings.filter((m) => m.status === "planned").length > 0 && (
+            <ul className="list-card">
+              {week.meetings.filter((m) => m.status === "planned").map((m) => (
+                <li key={m.id}>
+                  <Link href={`/clients/${m.client_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-tint">
+                    <Avatar name={m.client?.name ?? "?"} size={40} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-navy">{m.client?.name}</p>
+                      <p className="truncate text-sm text-muted">{[m.client?.firm, m.client?.area].filter(Boolean).join(" · ")}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-tint px-3 py-0.5 text-sm font-semibold text-due">{meetingWhen(m.scheduled_for, m.scheduled_time).split(",").slice(0, 2).join(",")}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-sm text-muted">
+            {summary.length ? summary.join(" · ") : "Nobody to call today."} · <Link href="/plan" className="font-semibold text-link">Weekly plan →</Link>
+          </p>
+        </section>
+      )}
 
       {(inbox.missingColumn || inbox.error || inbox.items.length > 0) && (
         <section>

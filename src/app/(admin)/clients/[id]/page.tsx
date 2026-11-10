@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTimeline, getLastNotes, getClientItems } from "@/lib/queries";
 import { ClientItems } from "@/components/client-items";
+import { DirectoryCard } from "@/components/directory-card";
 import { LastSpoke } from "@/components/last-spoke";
 import { Timeline } from "@/components/timeline";
 import { ClientHeader } from "./client-header";
@@ -25,13 +26,18 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
   ]);
   if (error) throw error;
   if (!client) notFound();
-  const c = client as Client;
+  const c = client as Client & { source_raw?: string | null };
+  // Only firms listing several people need this extra lookup (about 20 of 284).
+  const { data: colleagues } = c.firm_group && (c.firm_contacts ?? 1) > 1
+    ? await supabase.from("clients").select("id, name, designation, mobile, landline, phone").eq("firm_group", c.firm_group).neq("id", c.id).order("name")
+    : { data: [] };
 
   return (
     <div className="space-y-6">
       <Link href="/clients" className="text-sm font-semibold text-link">← Clients</Link>
       <ClientHeader client={c} />
       <LastSpoke note={last.get(c.id)} pending={c.pending_from_client} />
+      <DirectoryCard c={c} colleagues={colleagues ?? []} raw={c.source_raw ?? null} />
 
       <section>
         <h2 className="text-lg font-bold text-navy">Where things stand</h2>

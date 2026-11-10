@@ -10,7 +10,7 @@ Next.js 15 (App Router, TypeScript) · Tailwind CSS 4 · Supabase (Postgres, Aut
 
 1. Create a Supabase project.
 2. **Auth → Providers → Email**: keep Email enabled, turn **off** "Allow new users to sign up". (Optional: turn off "Confirm email"; the user script confirms emails anyway.)
-3. **SQL Editor**: run `supabase/migrations/20261107000000_init.sql`, then `supabase/migrations/20261108000000_review_inbox.sql`, then `supabase/migrations/20261110000000_client_items.sql`. It creates all tables, RLS policies, the `clients.updated_at` trigger, and the private `note-photos` bucket with its policies.
+3. **SQL Editor**: run `supabase/migrations/20261107000000_init.sql`, then `supabase/migrations/20261108000000_review_inbox.sql`, then `supabase/migrations/20261110000000_client_items.sql`, then `supabase/migrations/20261111000000_directory.sql`. It creates all tables, RLS policies, the `clients.updated_at` trigger, and the private `note-photos` bucket with its policies.
    Or with the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
 4. Copy `.env.example` to `.env.local` and fill in the project URL, anon key and service role key (Project Settings → API).
 
@@ -54,3 +54,29 @@ npm run dev
 - Overdue = `next_follow_up` before today; Due today = equal to today. "Today" is computed in Asia/Karachi. Dates show as `07 Nov 2026`.
 - Role checks are enforced in the UI/server layouts (`simple` users are redirected from admin pages to `/ahmed`). The database is open to any authenticated user, as specified.
 - Photos are resized in the browser (max 2000px JPEG) before upload, stored at `note-photos/<client_id>/…`, and displayed via 1-hour signed URLs.
+
+## Architect directory and weekly outreach
+
+The directory (`data/lahore_architects_structured.csv`) holds people's names and phone numbers.
+It is **git-ignored**: keep it out of the repository, and keep the repository private.
+
+Import (safe to re-run; never duplicates rows or overwrites edited stages, notes, picks or summaries):
+
+```bash
+npm run import:architects
+```
+
+That needs `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`. Without it, write an SQL file and paste it into the Supabase SQL Editor:
+
+```bash
+npm run import:architects -- --sql import-architects.sql
+```
+
+Vercel environment variables for the weekly plan (server-only):
+
+- `WEEKLY_MEETING_TARGET` (default `2`)
+- `AHMED_WHATSAPP`: Ahmed's number, international format, digits only (e.g. `923001234567`), for the "Send reminder to Ahmed" button.
+
+Screens: `/queue` (who to meet next, Ahmed's picks, skip), `/queue/print` (A4 list for Ahmed to tick),
+`/plan` (progress, Suggest next 2, mark done, reschedule, WhatsApp reminder), `/meetings/[id]/brief` (printable brief),
+`/ahmed/meetings` (Ahmed's cards with Call, Map, I met them, Can't make it).

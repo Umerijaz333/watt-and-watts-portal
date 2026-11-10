@@ -75,7 +75,7 @@ export async function quickCreateClient(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clients")
-    .insert({ name: n, phone: phone.trim() || null })
+    .insert({ name: n, phone: phone.trim() || null, stage: "first_contact" })
     .select("id, name")
     .single();
   if (error || !data) return { ok: false, error: error ? errMsg(error) : "Could not create client." };

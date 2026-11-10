@@ -9,6 +9,8 @@ import type { ActionState } from "@/lib/types";
  * Add a note. Also moves the client's next_follow_up to the note's date and,
  * when given, overwrites clients.pending_from_client.
  * Set `require_follow_up=1` in the form to make the date mandatory (Ahmed's form).
+ * With `meeting_id`, the note completes that meeting: the follow-up date is required,
+ * the meeting becomes "done" and the client moves to "meeting_done" (never backwards).
  */
 export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionState> {
   await getUserId(); // logged in? (checked from the session token, no database trip)
@@ -16,7 +18,8 @@ export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionS
   const body = str(fd, "body");
   const pending = str(fd, "pending_from_client");
   const followUp = str(fd, "next_follow_up");
-  const requireFollowUp = fd.get("require_follow_up") === "1";
+  const meetingId = str(fd, "meeting_id");
+  const requireFollowUp = fd.get("require_follow_up") === "1" || !!meetingId;
 
   if (!clientId) return { ok: false, error: "Please choose a client." };
   if (!body) return { ok: false, error: "Please write what was discussed." };
@@ -32,10 +35,21 @@ export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionS
   const clientPatch: Record<string, string> = {};
   if (followUp) clientPatch.next_follow_up = followUp;
   if (pending) clientPatch.pending_from_client = pending;
-  if (Object.keys(clientPatch).length) {
-    const { error: upErr } = await supabase.from("clients").update(clientPatch).eq("id", clientId);
-    if (upErr) return { ok: false, error: `Note saved, but the client's follow-up was not updated: ${errMsg(upErr)}` };
+  const writes = [];
+  if (Object.keys(clientPatch).length) writes.push(supabase.from("clients").update(clientPatch).eq("id", clientId));
+  if (meetingId) {
+    writes.push(
+      supabase.from("meetings").update({ status: "done", outcome_note: body, needs_reschedule: false }).eq("id", meetingId),
+      // Move forward to "meeting done" only from the early stages.
+      supabase.from("clients").update({ stage: "meeting_done" }).eq("id", clientId).in("stage", ["not_contacted", "first_contact"]),
+    );
+  } else {
+    // A note on an imported, not-yet-contacted architect means we are now in touch.
+    writes.push(supabase.from("clients").update({ stage: "first_contact" }).eq("id", clientId).eq("stage", "not_contacted"));
   }
+  const results = await Promise.all(writes);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { ok: false, error: `Note saved, but the client or meeting was not updated: ${errMsg(failed.error)}` };
 
   return { ok: true, message: "Note saved." };
 }

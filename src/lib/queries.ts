@@ -83,8 +83,11 @@ export async function getProfiles(): Promise<Profile[]> {
 
 export async function getClientOptions(): Promise<{ id: string; name: string; firm: string | null }[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("clients").select("id, name, firm").order("name");
-  return data ?? [];
+  const { data } = await supabase.from("clients").select("id, name, firm, stage").order("name");
+  const rows = data ?? [];
+  const contacted = rows.filter((r) => r.stage !== "not_contacted");
+  const rest = rows.filter((r) => r.stage === "not_contacted");
+  return [...contacted, ...rest].map(({ id, name, firm }) => ({ id, name, firm }));
 }
 
 /** Clients due today or overdue, oldest first. */

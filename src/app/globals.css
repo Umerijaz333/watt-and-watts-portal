@@ -60,3 +60,16 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   .animate-pop, .animate-fade-up { animation: none; }
   .press:active { transform: none; }
 }
+
+/* Print: A4, plain black on white, no app chrome. */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff !important; color: #000; }
+  header.app-bar, nav.app-bar { display: none !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  .print-area { break-inside: auto; margin-bottom: 6mm; }
+  .print-area h2 { break-after: avoid; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  a { color: #000; text-decoration: none; }
+}

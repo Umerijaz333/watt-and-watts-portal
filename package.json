@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "create-users": "node scripts/create-users.mjs"
+    "create-users": "node scripts/create-users.mjs",
+    "import:architects": "tsx --env-file-if-exists=.env.local scripts/import-architects.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19.3.0",
     "supabase": "^3.0.0",
     "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }

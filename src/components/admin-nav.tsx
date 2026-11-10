@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Dashboard" },
+  { href: "/queue", label: "Queue" },
+  { href: "/plan", label: "Plan" },
   { href: "/clients", label: "Clients" },
   { href: "/tasks", label: "Tasks" },
 ];
@@ -13,13 +15,13 @@ export function AdminNav({ name }: { name: string }) {
   const path = usePathname();
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   return (
-    <header className="sticky top-0 z-10 bg-navy text-paper">
+    <header className="app-bar sticky top-0 z-10 bg-navy text-paper print:hidden">
       <div className="mx-auto flex max-w-5xl items-center gap-1 px-3 py-2 sm:gap-2 sm:px-4">
         <Link href="/" className="mr-1 whitespace-nowrap font-display text-lg font-semibold text-paper sm:mr-2" aria-label="Watt & Watts">
           <span className="sm:hidden">W&amp;W</span>
           <span className="hidden sm:inline">Watt &amp; Watts</span>
         </Link>
-        <nav className="flex flex-1 gap-0.5 sm:gap-1">
+        <nav className="-mx-1 flex flex-1 gap-0.5 overflow-x-auto px-1 [scrollbar-width:none] sm:gap-1">
           {LINKS.map((l) => (
             <Link
               key={l.href}

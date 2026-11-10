@@ -18,7 +18,27 @@ export type Client = {
   next_follow_up: string | null;
   created_at: string;
   updated_at: string;
+  // Architect directory fields (null for clients added by hand)
+  source_id?: string | null;
+  designation?: string | null;
+  address?: string | null;
+  area?: string | null;
+  landline?: string | null;
+  mobile?: string | null;
+  tier?: "A" | "B" | "C" | null;
+  firm_group?: string | null;
+  firm_contacts?: number | null;
+  is_firm_primary?: boolean | null;
+  suggested_rank?: number | null;
+  ahmed_pick?: boolean | null;
+  ahmed_pick_order?: number | null;
+  skipped?: boolean | null;
+  needs_review?: boolean | null;
+  review_flags?: string | null;
+  duplicate_of?: string | null;
 };
+
+export type MeetingStatus = "planned" | "done" | "skipped" | "rescheduled";
 
 export type Requirement = {
   id: string;

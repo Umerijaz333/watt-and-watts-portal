@@ -177,3 +177,22 @@ export async function getInbox(meId: string): Promise<{ items: InboxItem[]; miss
   items.sort((a, b) => b.created_at.localeCompare(a.created_at));
   return { items, missingColumn: false };
 }
+
+/** Entries for "Orders, sent & received". `missingTable` if the migration has not been run. */
+export async function getClientItems(clientId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("client_items")
+    .select("id, client_id, kind, description, quantity, item_date, notes, created_at, author:profiles(name)")
+    .eq("client_id", clientId)
+    .order("item_date", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error)
+    return {
+      items: [] as import("@/lib/types").ClientItem[],
+      missingTable: error.code === "42P01" || error.code === "PGRST205" || /client_items/.test(error.message),
+      error: error.message,
+    };
+  const items = (data ?? []).map((r) => ({ ...r, author: Array.isArray(r.author) ? r.author[0] ?? null : r.author })) as import("@/lib/types").ClientItem[];
+  return { items, missingTable: false as boolean, error: undefined as string | undefined };
+}

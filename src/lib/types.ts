@@ -47,3 +47,17 @@ export type Task = {
 export type Duplicate = { id: string; name: string; firm: string | null; phone: string | null };
 
 export type ActionState = { ok: boolean; error?: string; message?: string; duplicate?: Duplicate } | null;
+
+export type ItemKind = "ordered" | "to_send" | "sent" | "received";
+
+export type ClientItem = {
+  id: string;
+  client_id: string;
+  kind: ItemKind;
+  description: string;
+  quantity: number | null;
+  item_date: string | null;
+  notes: string | null;
+  created_at: string;
+  author?: { name: string } | null;
+};

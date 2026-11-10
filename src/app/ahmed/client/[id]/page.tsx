@@ -2,7 +2,8 @@ import Link from "@/components/link";
 import { NoteIcon } from "@/components/icons";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTimeline, getLastNotes } from "@/lib/queries";
+import { getTimeline, getLastNotes, getClientItems } from "@/lib/queries";
+import { ITEM_KINDS } from "@/lib/constants";
 import { LastSpoke } from "@/components/last-spoke";
 import { FollowUpActions } from "@/components/followup-actions";
 import { Timeline } from "@/components/timeline";
@@ -14,10 +15,11 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClient();
-  const [{ data: c, error }, timeline, last] = await Promise.all([
+  const [{ data: c, error }, timeline, last, items] = await Promise.all([
     supabase.from("clients").select("*").eq("id", id).maybeSingle(),
     getTimeline(id, 5),
     getLastNotes([id]),
+    getClientItems(id),
   ]);
   if (error) throw error;
   if (!c) notFound();
@@ -56,6 +58,32 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
           </div>
         ))}
       </dl>
+
+      {items.items.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-2xl font-bold text-navy">Orders, sent &amp; received</h2>
+          <div className="space-y-3">
+            {ITEM_KINDS.map((k) => {
+              const list = items.items.filter((i) => i.kind === k.value);
+              if (!list.length) return null;
+              return (
+                <div key={k.value} className="card">
+                  <p className={`mb-2 inline-block rounded-full px-3 py-0.5 text-lg font-semibold ${k.pill}`}>{k.label}</p>
+                  <ul className="space-y-2 text-xl">
+                    {list.map((i) => (
+                      <li key={i.id}>
+                        {i.description}
+                        {i.quantity !== null && <span className="font-semibold text-navy"> × {i.quantity}</span>}
+                        {i.item_date && <span className="block text-lg">{formatDate(i.item_date)}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-2xl font-bold text-navy">Recent history</h2>

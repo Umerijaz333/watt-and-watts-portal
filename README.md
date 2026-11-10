@@ -10,7 +10,7 @@ Next.js 15 (App Router, TypeScript) · Tailwind CSS 4 · Supabase (Postgres, Aut
 
 1. Create a Supabase project.
 2. **Auth → Providers → Email**: keep Email enabled, turn **off** "Allow new users to sign up". (Optional: turn off "Confirm email"; the user script confirms emails anyway.)
-3. **SQL Editor**: run `supabase/migrations/20261107000000_init.sql`, then `supabase/migrations/20261108000000_review_inbox.sql`. It creates all tables, RLS policies, the `clients.updated_at` trigger, and the private `note-photos` bucket with its policies.
+3. **SQL Editor**: run `supabase/migrations/20261107000000_init.sql`, then `supabase/migrations/20261108000000_review_inbox.sql`, then `supabase/migrations/20261110000000_client_items.sql`. It creates all tables, RLS policies, the `clients.updated_at` trigger, and the private `note-photos` bucket with its policies.
    Or with the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
 4. Copy `.env.example` to `.env.local` and fill in the project URL, anon key and service role key (Project Settings → API).
 

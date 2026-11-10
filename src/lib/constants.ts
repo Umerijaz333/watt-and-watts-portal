@@ -29,3 +29,11 @@ export function typeLabel(v: string | null | undefined) {
 }
 
 export const PHOTO_BUCKET = "note-photos";
+
+/** Orders, sent & received: the four kinds of entry, in display order. */
+export const ITEM_KINDS = [
+  { value: "ordered", label: "Ordered by client", short: "Ordered", hint: "What they have confirmed they are buying", pill: "bg-navy text-white" },
+  { value: "to_send", label: "To send", short: "To send", hint: "What we are going to send them", pill: "bg-tint text-due" },
+  { value: "sent", label: "Sent", short: "Sent", hint: "What we have already sent", pill: "bg-done-tint text-done" },
+  { value: "received", label: "Received from client", short: "Received", hint: "Drawings, payment, returned items…", pill: "bg-[#e6e8ec] text-[#3c4250]" },
+] as const;

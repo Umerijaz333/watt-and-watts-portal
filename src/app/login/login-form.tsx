@@ -1,58 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { useHydrated } from "@/lib/use-hydrated";
+import { useActionState } from "react";
+import { loginAction } from "@/app/actions/auth";
+import { ActionForm, SubmitButton } from "@/components/form-bits";
 
 export function LoginForm({ initialError }: { initialError?: string }) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | undefined>(initialError);
-  const [loading, setLoading] = useState(false);
-  const ready = useHydrated();
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(undefined);
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (signInError || !data.user) {
-        setError(signInError?.message === "Invalid login credentials" ? "Wrong email or password." : signInError?.message ?? "Could not sign in.");
-        return;
-      }
-      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
-      if (profileError || !profile) {
-        setError("Signed in, but no profile was found for this account.");
-        await supabase.auth.signOut();
-        return;
-      }
-      router.replace("/"); // the dashboard sends simple-view users on to /ahmed
-      router.refresh();
-    } catch {
-      setError("Network error. Check your connection and try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [state, action, pending] = useActionState(loginAction, null);
+  const error = state?.error ?? (state ? undefined : initialError);
 
   return (
-    <form onSubmit={onSubmit} className="card space-y-4">
+    <ActionForm action={action} pending={pending} className="card space-y-4">
       <div>
         <label htmlFor="email" className="label">Email</label>
-        <input id="email" type="email" autoComplete="email" required className="input text-lg" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input id="email" name="email" type="email" autoComplete="email" required className="input text-lg" />
       </div>
       <div>
         <label htmlFor="password" className="label">Password</label>
-        <input id="password" type="password" autoComplete="current-password" required className="input text-lg" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input id="password" name="password" type="password" autoComplete="current-password" required className="input text-lg" />
       </div>
-      {error && <p role="alert" className="rounded-lg bg-overdue-tint p-3 text-sm font-medium text-overdue">{error}</p>}
-      <button type="submit" disabled={loading || !ready} className="btn-primary w-full py-3 text-lg">
-        {loading ? "Signing in…" : "Sign in"}
-      </button>
-    </form>
+      {error && <p role="alert" className="rounded-xl bg-overdue-tint p-3 text-sm font-medium text-overdue">{error}</p>}
+      <SubmitButton className="btn-primary w-full py-3 text-lg" pendingText="Signing in…">Sign in</SubmitButton>
+    </ActionForm>
   );
 }

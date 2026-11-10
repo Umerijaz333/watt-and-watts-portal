@@ -5,14 +5,12 @@ import { getDueClients } from "@/lib/queries";
 import { todayISO, todayLong } from "@/lib/dates";
 
 export default async function AhmedHome() {
-  const profile = await requireProfile();
   const today = todayISO();
-  let count: number | null = null;
-  try {
-    count = (await getDueClients(today)).length;
-  } catch {
-    count = null;
-  }
+  // Profile and follow-up count load at the same time.
+  const [profile, count] = await Promise.all([
+    requireProfile(),
+    getDueClients(today).then((d) => d.length).catch(() => null),
+  ]);
 
   return (
     <div className="space-y-5">

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { getUserId } from "@/lib/auth";
 import { str, int, isISODate, errMsg } from "@/lib/action-utils";
 import { todayISO } from "@/lib/dates";
 import type { ActionState } from "@/lib/types";
@@ -10,7 +10,7 @@ const KINDS = ["ordered", "to_send", "sent", "received"];
 
 /** Add (no id) or edit (with id) an entry in "Orders, sent & received". */
 export async function saveItem(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const id = str(fd, "id");
   const clientId = str(fd, "client_id");
   const kind = str(fd, "kind");
@@ -37,14 +37,14 @@ export async function saveItem(_prev: ActionState, fd: FormData): Promise<Action
 
 /** One tap: a "To send" entry becomes "Sent", dated today. */
 export async function markItemSent(id: string): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const supabase = await createClient();
   const { error } = await supabase.from("client_items").update({ kind: "sent", item_date: todayISO() }).eq("id", id);
   return error ? { ok: false, error: errMsg(error) } : { ok: true };
 }
 
 export async function deleteItem(id: string): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const supabase = await createClient();
   const { error } = await supabase.from("client_items").delete().eq("id", id);
   return error ? { ok: false, error: errMsg(error) } : { ok: true };

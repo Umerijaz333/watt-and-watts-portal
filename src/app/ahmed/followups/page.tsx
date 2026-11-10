@@ -1,13 +1,12 @@
 import Link from "@/components/link";
-import { getDueClients, getLastNotes } from "@/lib/queries";
+import { getDueClientsWithLastNote } from "@/lib/queries";
 import { daysFromToday, formatDate, relativeDay, shortDate, todayISO } from "@/lib/dates";
 import { FollowUpActions } from "@/components/followup-actions";
 import { Avatar } from "@/components/avatar";
 
 export default async function AhmedFollowups() {
   const today = todayISO();
-  const due = await getDueClients(today);
-  const last = await getLastNotes(due.map((c) => c.id));
+  const due = await getDueClientsWithLastNote(today);
   const late = due.filter((c) => c.next_follow_up! < today).length;
 
   return (
@@ -33,7 +32,7 @@ export default async function AhmedFollowups() {
         <ul className="space-y-5">
           {due.map((c) => {
             const days = daysFromToday(c.next_follow_up!);
-            const note = last.get(c.id);
+            const note = c.lastNote;
             return (
               <li key={c.id} className="space-y-4 rounded-3xl bg-surface p-5 shadow-[0_2px_12px_rgba(20,32,90,0.08)]">
                 <Link href={`/ahmed/client/${c.id}`} className="flex items-start gap-4">

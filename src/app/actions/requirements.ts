@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { getUserId } from "@/lib/auth";
 import { str, int, errMsg } from "@/lib/action-utils";
 import type { ActionState } from "@/lib/types";
 
 export async function saveRequirement(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const id = str(fd, "id");
   const clientId = str(fd, "client_id");
   const product = str(fd, "product_text");
@@ -27,7 +27,7 @@ export async function saveRequirement(_prev: ActionState, fd: FormData): Promise
 }
 
 export async function deleteRequirement(id: string): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const supabase = await createClient();
   const { error } = await supabase.from("client_requirements").delete().eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };

@@ -2,10 +2,9 @@ import NextLink from "next/link";
 import type { ComponentProps } from "react";
 
 /**
- * next/link with prefetching off by default. Prefetching every visible link fires a
- * Supabase session check per link (costly on mobile data) and raced with server-action
- * refreshes in testing, leaving forms stuck on "Saving…".
+ * App-wide link. Uses Next.js's default prefetching, so a tap shows the next
+ * screen's loading state immediately instead of waiting on the network.
  */
-export default function Link({ prefetch = false, ...props }: ComponentProps<typeof NextLink>) {
-  return <NextLink prefetch={prefetch} {...props} />;
+export default function Link(props: ComponentProps<typeof NextLink>) {
+  return <NextLink {...props} />;
 }

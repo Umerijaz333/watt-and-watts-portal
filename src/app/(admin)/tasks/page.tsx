@@ -1,5 +1,5 @@
 import Link from "@/components/link";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getUserId } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getClientOptions, getProfiles } from "@/lib/queries";
 import { TASK_STATUSES } from "@/lib/constants";
@@ -10,22 +10,25 @@ import { TaskDelete } from "@/components/task-delete";
 import type { Task } from "@/lib/types";
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
-  const me = await requireAdmin();
   const { filter = "all" } = await searchParams;
-  const [profiles, clients] = await Promise.all([getProfiles(), getClientOptions()]);
+  const supabase = await createClient();
+  const myId = await getUserId(); // from the session token, no database trip
+  // All four requests run at the same time; filtering happens here (the lists are small).
+  const [me, profiles, clients, { data, error }] = await Promise.all([
+    requireAdmin(),
+    getProfiles(),
+    getClientOptions(),
+    supabase
+      .from("tasks")
+      .select("*, owner_profile:profiles!tasks_owner_fkey(name), client:clients(id, name)")
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false }),
+  ]);
   // Match by name so the filter keeps working whatever Ahmed's role is.
   const ahmed = profiles.find((p) => p.name.trim().toLowerCase() === "ahmed") ?? profiles.find((p) => p.role === "simple");
-
-  const supabase = await createClient();
-  let q = supabase
-    .from("tasks")
-    .select("*, owner_profile:profiles!tasks_owner_fkey(name), client:clients(id, name)")
-    .order("due_date", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false });
-  if (filter === "mine") q = q.eq("owner", me.id);
-  if (filter === "ahmed" && ahmed) q = q.eq("owner", ahmed.id);
-  const { data, error } = await q;
-  const tasks = (data ?? []) as Task[];
+  const all = (data ?? []) as Task[];
+  const tasks =
+    filter === "mine" ? all.filter((t) => t.owner === myId) : filter === "ahmed" && ahmed ? all.filter((t) => t.owner === ahmed.id) : all;
   const today = todayISO();
 
   const filters = [

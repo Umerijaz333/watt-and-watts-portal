@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getUserId } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
 import type { ActionState } from "@/lib/types";
 
@@ -27,7 +27,7 @@ export async function createTask(_prev: ActionState, fd: FormData): Promise<Acti
 }
 
 export async function setTaskStatus(id: string, status: string): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   if (!["todo", "doing", "done"].includes(status)) return { ok: false, error: "Invalid status." };
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").update({ status }).eq("id", id);
@@ -36,7 +36,7 @@ export async function setTaskStatus(id: string, status: string): Promise<{ ok: b
 }
 
 export async function deleteTask(id: string): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) return { ok: false, error: errMsg(error) };

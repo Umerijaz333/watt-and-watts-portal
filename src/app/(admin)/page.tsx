@@ -2,7 +2,7 @@ import Link from "@/components/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { VIEW_COOKIE, prefersSimple } from "@/lib/view";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getUserId } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getDueClients, getInbox } from "@/lib/queries";
 import { ReviewInbox } from "@/components/review-inbox";
@@ -12,21 +12,26 @@ import { StageChip } from "@/components/stage-chip";
 import { TaskStatusSelect } from "@/components/task-status-select";
 
 export default async function Dashboard() {
-  const profile = await requireAdmin();
-  if (prefersSimple(profile, (await cookies()).get(VIEW_COOKIE)?.value)) redirect("/ahmed");
+  const viewCookie = (await cookies()).get(VIEW_COOKIE)?.value;
+  if (viewCookie === "simple") redirect("/ahmed");
   const today = todayISO();
   const supabase = await createClient();
-  const [due, { data: myTasks, error: taskErr }, inbox] = await Promise.all([
+  const userId = await getUserId(); // from the session token, no database trip
+  // Profile, follow-ups, tasks and the review inbox all load at the same time.
+  const [profile, due, { data: myTasks, error: taskErr }, inbox] = await Promise.all([
+    requireAdmin(),
     getDueClients(today),
     supabase
       .from("tasks")
       .select("id, title, due_date, status, client:clients(id, name)")
-      .eq("owner", profile.id)
+      .eq("owner", userId)
       .neq("status", "done")
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(10),
-    getInbox(profile.id),
+    getInbox(userId),
   ]);
+  // First visit on Ahmed's phone: remember the simple view on this device, then go there.
+  if (prefersSimple(profile, viewCookie)) redirect("/view?mode=simple");
   const overdue = due.filter((c) => c.next_follow_up! < today);
   const dueToday = due.filter((c) => c.next_follow_up === today);
 

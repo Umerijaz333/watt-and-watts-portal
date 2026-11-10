@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { getUserId } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
 import { STAGES, CLIENT_TYPES } from "@/lib/constants";
 import type { ActionState, Duplicate } from "@/lib/types";
@@ -26,7 +26,7 @@ const typeValues = CLIENT_TYPES.map((s) => s.value) as string[];
 
 /** Admin "Add client" form. Redirects to the new profile. */
 export async function createClientAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const name = str(fd, "name");
   if (!name) return { ok: false, error: "Name is required." };
   const type = str(fd, "type") ?? "architect";
@@ -65,7 +65,7 @@ export async function quickCreateClient(
   phone: string,
   force = false,
 ): Promise<{ ok: true; id: string; name: string } | { ok: false; error: string; duplicate?: Duplicate }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const n = name.trim();
   if (!n) return { ok: false, error: "Please enter the client's name." };
   if (!force) {
@@ -100,7 +100,7 @@ type EditableField = (typeof EDITABLE)[number];
 
 /** Generic form-based update: only keys present in the form are written. */
 export async function updateClientAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const id = str(fd, "id");
   if (!id) return { ok: false, error: "Missing client id." };
   const patch: Partial<Record<EditableField, string | null>> = {};
@@ -124,7 +124,7 @@ export async function updateClientField(
   field: "stage" | "next_follow_up",
   value: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const v = value.trim() || null;
   if (field === "stage" && (!v || !stageValues.includes(v))) return { ok: false, error: "Invalid stage." };
   if (field === "next_follow_up" && v && !isISODate(v)) return { ok: false, error: "Invalid date." };
@@ -143,14 +143,15 @@ export async function snoozeFollowUp(
   date: string,
   label: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   if (!isISODate(date)) return { ok: false, error: "Invalid date." };
   const supabase = await createClient();
-  const { error } = await supabase.from("clients").update({ next_follow_up: date }).eq("id", clientId);
+  // Both writes at the same time (one round trip instead of two).
+  const [{ error }, { error: nErr }] = await Promise.all([
+    supabase.from("clients").update({ next_follow_up: date }).eq("id", clientId),
+    supabase.from("notes").insert({ client_id: clientId, body: `Follow-up moved to ${label}.`, next_follow_up: date }),
+  ]);
   if (error) return { ok: false, error: errMsg(error) };
-  const { error: nErr } = await supabase
-    .from("notes")
-    .insert({ client_id: clientId, body: `Follow-up moved to ${label}.`, next_follow_up: date });
   if (nErr) return { ok: false, error: `Date moved, but the history note failed: ${errMsg(nErr)}` };
   return { ok: true };
 }

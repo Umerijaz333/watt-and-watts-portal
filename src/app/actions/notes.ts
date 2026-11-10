@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getUserId } from "@/lib/auth";
 import { str, isISODate, errMsg } from "@/lib/action-utils";
 import type { ActionState } from "@/lib/types";
 
@@ -11,7 +11,7 @@ import type { ActionState } from "@/lib/types";
  * Set `require_follow_up=1` in the form to make the date mandatory (Ahmed's form).
  */
 export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const clientId = str(fd, "client_id");
   const body = str(fd, "body");
   const pending = str(fd, "pending_from_client");
@@ -42,7 +42,7 @@ export async function addNote(_prev: ActionState, fd: FormData): Promise<ActionS
 
 /** Edit a note's own fields. Does not touch the client record. */
 export async function updateNote(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireProfile();
+  await getUserId(); // logged in? (checked from the session token, no database trip)
   const id = str(fd, "id");
   const body = str(fd, "body");
   const followUp = str(fd, "next_follow_up");

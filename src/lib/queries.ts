@@ -100,6 +100,25 @@ export async function getDueClients(today: string) {
   return data ?? [];
 }
 
+/** Due/overdue clients together with each one's latest real note, in a single request. */
+export async function getDueClientsWithLastNote(today: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, name, firm, stage, next_follow_up, phone, notes(body, created_at, author:profiles(name))")
+    .lte("next_follow_up", today)
+    .not("notes.body", "like", "Follow-up moved to %")
+    .order("next_follow_up", { ascending: true })
+    .order("name")
+    .order("created_at", { referencedTable: "notes", ascending: false })
+    .limit(1, { referencedTable: "notes" });
+  if (error) throw error;
+  return (data ?? []).map(({ notes, ...c }) => {
+    const n = (notes as { body: string; created_at: string; author: Named }[] | null)?.[0];
+    return { ...c, lastNote: n ? { body: n.body, created_at: n.created_at, author: nameOf(n.author) } : undefined };
+  });
+}
+
 /** Most recent note per client, for "last time we spoke" summaries. */
 export async function getLastNotes(clientIds: string[]) {
   const map = new Map<string, { body: string; created_at: string; author: string }>();

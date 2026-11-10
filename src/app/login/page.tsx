@@ -8,7 +8,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5 py-10">
       <div className="mb-8 text-center">
         <h1 className="font-display text-3xl font-semibold text-navy">Watt &amp; Watts</h1>
-        <p className="text-muted">Sign in to continue</p>
+        <p className="text-muted">Welcome back. Sign in to see who to call today.</p>
       </div>
       <LoginForm initialError={error === "no-profile" ? "Your account has no profile yet. Ask Umer to set it up." : undefined} />
     </main>

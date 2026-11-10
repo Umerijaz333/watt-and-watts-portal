@@ -12,9 +12,9 @@ export function Requirements({ clientId, rows }: { clientId: string; rows: Requi
   return (
     <div className="space-y-3">
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line bg-white p-4 text-muted">No requirements yet. Add the first product below.</p>
+        <p className="rounded-2xl bg-white/60 p-4 text-muted">No requirements yet. Add the first product below.</p>
       ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-white">
+        <ul className="list-card">
           {rows.map((r) => <RequirementRow key={r.id} row={r} />)}
         </ul>
       )}

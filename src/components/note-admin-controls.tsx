@@ -51,10 +51,10 @@ export function NoteAdminControls({ note }: { note: Note }) {
       {(note.pending_from_client || note.next_follow_up) && (
         <dl className="mt-2 space-y-0.5 text-sm text-muted">
           {note.pending_from_client && (
-            <div><dt className="inline font-semibold">Pending from client: </dt><dd className="inline">{note.pending_from_client}</dd></div>
+            <div><dt className="inline font-semibold">Waiting on client: </dt><dd className="inline">{note.pending_from_client}</dd></div>
           )}
           {note.next_follow_up && (
-            <div><dt className="inline font-semibold">Follow-up: </dt><dd className="inline">{formatDate(note.next_follow_up)}</dd></div>
+            <div><dt className="inline font-semibold">Call again: </dt><dd className="inline">{formatDate(note.next_follow_up)}</dd></div>
           )}
         </dl>
       )}

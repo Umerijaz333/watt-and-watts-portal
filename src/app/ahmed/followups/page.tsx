@@ -11,7 +11,7 @@ export default async function AhmedFollowups() {
   const late = due.filter((c) => c.next_follow_up! < today).length;
 
   return (
-    <div className="-mx-4 -my-5 min-h-[calc(100dvh-64px)] bg-[#eef2f8] px-4 py-5">
+    <div>
       <Link href="/ahmed" className="text-lg font-semibold text-link">← Home</Link>
 
       <header className="mb-5 mt-3">

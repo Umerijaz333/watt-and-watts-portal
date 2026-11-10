@@ -32,22 +32,24 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
       <LastSpoke note={last.get(c.id)} pending={c.pending_from_client} />
 
       <section>
-        <h2 className="mb-2 text-lg font-bold">Conversation status</h2>
+        <h2 className="text-lg font-bold text-navy">Where things stand</h2>
+        <p className="mb-3 text-sm text-muted">What you have discussed, what is next, and who is waiting on whom.</p>
         <ClientDetailsForm client={c} />
       </section>
 
       <section>
-        <h2 className="mb-2 text-lg font-bold">Requirements</h2>
+        <h2 className="text-lg font-bold text-navy">What they need</h2>
+        <p className="mb-3 text-sm text-muted">Products and quantities for this project.</p>
         <Requirements clientId={c.id} rows={(reqs ?? []) as Requirement[]} />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-lg font-bold">Add note</h2>
+          <h2 className="mb-3 text-lg font-bold text-navy">Write down a conversation</h2>
           <AddNoteForm clientId={c.id} />
         </div>
         <div>
-          <h2 className="mb-2 text-lg font-bold">Add photo</h2>
+          <h2 className="mb-3 text-lg font-bold text-navy">Add a photo of notes</h2>
           <div className="card">
             <PhotoUpload clientId={c.id} />
           </div>
@@ -55,7 +57,7 @@ export default async function ClientProfile({ params }: { params: Promise<{ id: 
       </section>
 
       <section>
-        <h2 className="mb-2 text-lg font-bold">History <span className="text-muted">({timeline.length})</span></h2>
+        <h2 className="mb-3 text-lg font-bold text-navy">Everything so far <span className="text-muted">({timeline.length})</span></h2>
         <Timeline items={timeline} editable />
       </section>
     </div>

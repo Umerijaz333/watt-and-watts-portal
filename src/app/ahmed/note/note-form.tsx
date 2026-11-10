@@ -13,12 +13,13 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
   const [clientId, setClientId] = useState<string | null>(initialClientId);
   const [date, setDate] = useState("");
   const [clientError, setClientError] = useState<string>();
+  const [clientName, setClientName] = useState<string | null>(clients.find((c) => c.id === initialClientId)?.name ?? null);
 
   if (state?.ok)
     return (
       <DoneScreen
-        title="Note saved"
-        detail={date ? `Next follow-up: ${formatDate(date)}` : undefined}
+        title="Done! Note saved"
+        detail={`${clientName ? `Saved for ${clientName}. ` : ""}${date ? `We'll remind you to call on ${formatDate(date)}.` : ""}`}
         again={{ href: "/ahmed/note", label: "Add another note" }}
       />
     );
@@ -37,23 +38,23 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
       <input type="hidden" name="require_follow_up" value="1" />
 
       <fieldset>
-        <legend className="mb-2 text-xl font-bold">1. Client</legend>
-        <ClientPicker clients={clients} value={clientId} onChange={(id) => { setClientId(id); setClientError(undefined); }} />
+        <legend className="mb-2 text-xl font-bold text-navy">1. Who did you meet?</legend>
+        <ClientPicker clients={clients} value={clientId} onChange={(id, name) => { setClientId(id); setClientName(name ?? null); setClientError(undefined); }} />
         {clientError && <p role="alert" className="mt-2 rounded-lg bg-overdue-tint p-3 text-xl font-medium text-overdue">{clientError}</p>}
       </fieldset>
 
       <div>
-        <label htmlFor="body" className="mb-2 block text-xl font-bold">2. What was discussed</label>
+        <label htmlFor="body" className="mb-2 block text-xl font-bold text-navy">2. What did you talk about?</label>
         <textarea id="body" name="body" required rows={5} className="input py-3 text-xl" />
       </div>
 
       <div>
-        <label htmlFor="pending" className="mb-2 block text-xl font-bold">3. Pending from the client</label>
+        <label htmlFor="pending" className="mb-2 block text-xl font-bold text-navy">3. What are we waiting for from them?</label>
         <textarea id="pending" name="pending_from_client" rows={2} className="input py-3 text-xl" placeholder="e.g. drawings, approval, payment" />
       </div>
 
       <div>
-        <label htmlFor="follow" className="mb-2 block text-xl font-bold">4. Next follow-up date *</label>
+        <label htmlFor="follow" className="mb-2 block text-xl font-bold text-navy">4. When should we call them again?</label>
         <div className="mb-3 grid grid-cols-2 gap-2 min-[400px]:grid-cols-3">
           {QUICK_DATES.map((q) => {
             const v = plusDays(q.days);
@@ -63,7 +64,7 @@ export function AhmedNoteForm({ clients, initialClientId }: { clients: ClientOpt
                 type="button"
                 onClick={() => setDate(v)}
                 aria-pressed={date === v}
-                className={`rounded-xl border-2 py-4 text-xl font-semibold ${date === v ? "border-link bg-tint text-navy" : "border-gray-400 bg-white"}`}
+                className={`press rounded-full border-2 py-4 text-xl font-semibold ${date === v ? "border-btn bg-btn text-white" : "border-tint-strong bg-surface text-navy"}`}
               >
                 {q.label}
               </button>

@@ -18,7 +18,7 @@ export function TaskStatusSelect({ id, status, large = false }: { id: string; st
         aria-label="Status"
         value={value}
         disabled={pending || !ready}
-        className={`rounded-lg border border-gray-400 bg-white font-semibold ${large ? "px-3 py-3 text-xl" : "px-2 py-1.5 text-sm"}`}
+        className={`rounded-full border border-[#c4cad6] bg-surface font-semibold text-navy ${large ? "px-3 py-3 text-xl" : "px-2 py-1.5 text-sm"}`}
         onChange={(e) => {
           const next = e.target.value;
           const prev = value;

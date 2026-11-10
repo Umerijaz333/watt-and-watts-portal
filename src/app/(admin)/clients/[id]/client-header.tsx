@@ -3,6 +3,7 @@ import { useRefreshOnSuccess } from "@/lib/use-refresh";
 import { useRouter } from "next/navigation";
 import { PhoneIcon } from "@/components/icons";
 import { whatsappHref } from "@/lib/phone";
+import { Avatar } from "@/components/avatar";
 import { useHydrated } from "@/lib/use-hydrated";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
@@ -43,8 +44,10 @@ export function ClientHeader({ client }: { client: Client }) {
         </ActionForm>
       ) : (
         <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 gap-4">
+          <Avatar name={client.name} size={64} />
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold">{client.name}</h1>
+            <h1 className="font-display text-2xl font-bold text-navy">{client.name}</h1>
             <p className="text-muted">
               {[client.firm, typeLabel(client.type), client.city].filter(Boolean).join(" · ")}
             </p>
@@ -57,10 +60,11 @@ export function ClientHeader({ client }: { client: Client }) {
                 <span className="text-sm text-muted">No phone saved</span>
               )}
               {client.phone && whatsappHref(client.phone) && (
-                <a href={whatsappHref(client.phone)!} target="_blank" rel="noreferrer" className="btn py-2 bg-done text-white hover:opacity-90">WhatsApp</a>
+                <a href={whatsappHref(client.phone)!} target="_blank" rel="noreferrer" className="btn bg-done py-2 text-white hover:opacity-90">WhatsApp</a>
               )}
               {client.email && <a href={`mailto:${client.email}`} className="btn-secondary py-2">{client.email}</a>}
             </div>
+          </div>
           </div>
           <button type="button" className="btn-secondary py-1.5 text-sm" onClick={() => setEditing(true)}>Edit details</button>
         </div>
@@ -74,7 +78,7 @@ export function ClientHeader({ client }: { client: Client }) {
             </select>
           )}
         </AutoSave>
-        <AutoSave clientId={client.id} field="next_follow_up" initial={client.next_follow_up ?? ""} label="Next follow-up">
+        <AutoSave clientId={client.id} field="next_follow_up" initial={client.next_follow_up ?? ""} label="Call them again on">
           {(value, onChange, disabled) => (
             <input id="next_follow_up" type="date" value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className="input" />
           )}

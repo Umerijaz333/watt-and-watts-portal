@@ -8,7 +8,8 @@
   --color-btn-hover: #4a68b0;
   --color-ink: #111111;         /* body text, dark surfaces */
   --color-muted-large: #8a8a8a; /* large text only */
-  --color-paper: #f5f5f5;       /* page background, logo on dark */
+  --color-paper: #f5f5f5;       /* light fills inside cards, text on dark */
+  --color-canvas: #eef2f8;      /* page background: paper with a hint of brand blue */
 
   --color-surface: #ffffff;
   --color-line: #e3e5ea;
@@ -30,19 +31,21 @@
 }
 
 html { color-scheme: light; }
-body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+body { background: var(--color-canvas); color: var(--color-ink); font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
 h1, h2, h3, button, .font-display { font-family: var(--font-display); }
 a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, label:focus-within {
   outline: 2px solid var(--color-link);
   outline-offset: 2px;
 }
 
-@utility card { @apply rounded-xl border border-line bg-surface p-4; }
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-display font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed; }
+@utility shadow-soft { box-shadow: 0 2px 12px rgba(20, 32, 90, 0.08); }
+@utility card { @apply rounded-2xl bg-surface p-4 shadow-soft; }
+@utility list-card { @apply divide-y divide-line overflow-hidden rounded-2xl bg-surface shadow-soft; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-display font-semibold transition active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100; }
 @utility btn-primary { @apply btn bg-btn text-white hover:bg-btn-hover active:bg-btn-hover; }
-@utility btn-secondary { @apply btn border border-line bg-surface text-navy hover:bg-tint active:bg-tint-strong; }
+@utility btn-secondary { @apply btn border-2 border-tint-strong bg-surface text-navy hover:bg-tint active:bg-tint-strong; }
 @utility btn-danger { @apply btn border border-overdue/40 bg-surface text-overdue hover:bg-overdue-tint; }
-@utility input { @apply w-full rounded-lg border border-gray-400 bg-surface px-3 py-2.5 text-ink placeholder:text-muted focus:border-link focus:outline-none focus:ring-2 focus:ring-link/30; }
+@utility input { @apply w-full rounded-xl border border-[#c4cad6] bg-surface px-3 py-2.5 text-ink placeholder:text-muted focus:border-link focus:outline-none focus:ring-2 focus:ring-link/30; }
 @utility label { @apply mb-1 block text-sm font-semibold text-ink; }
 @utility badge { @apply inline-block rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs font-semibold text-muted; }
 
@@ -53,6 +56,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @utility animate-fade-up { animation: fade-up 260ms ease-out both; }
 @utility press { @apply transition-transform active:scale-[0.97]; }
 @media (prefers-reduced-motion: reduce) {
+  .btn:active { transform: none; }
   .animate-pop, .animate-fade-up { animation: none; }
   .press:active { transform: none; }
 }

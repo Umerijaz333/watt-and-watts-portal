@@ -36,7 +36,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold">Tasks</h1>
+      <div>
+        <h1 className="font-display text-3xl font-bold text-navy">Tasks</h1>
+        <p className="text-muted">Who is doing what, for both of you.</p>
+      </div>
       <TaskForm profiles={profiles} clients={clients} currentUserId={me.id} />
 
       <div className="flex gap-1" role="tablist">
@@ -44,7 +47,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           <Link
             key={f.key}
             href={`/tasks?filter=${f.key}`}
-            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${filter === f.key ? "bg-navy text-white" : "border border-line bg-white text-muted"}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${filter === f.key ? "bg-navy text-white" : "bg-surface text-muted shadow-soft"}`}
           >
             {f.label}
           </Link>
@@ -58,16 +61,16 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           {TASK_STATUSES.map((col) => {
             const list = tasks.filter((t) => t.status === col.value);
             return (
-              <section key={col.value} className={`rounded-xl border-t-4 bg-[#eceef2] p-3 ${col.value === "done" ? "border-done" : col.value === "doing" ? "border-link" : "border-navy"}`}>
-                <h2 className="mb-2 font-bold">{col.label} <span className="text-muted">({list.length})</span></h2>
+              <section key={col.value} className={`rounded-2xl border-t-4 bg-white/50 p-3 ${col.value === "done" ? "border-done" : col.value === "doing" ? "border-link" : "border-navy"}`}>
+                <h2 className="mb-3 font-bold text-navy">{col.label} <span className="text-muted">({list.length})</span></h2>
                 {list.length === 0 ? (
-                  <p className="p-2 text-sm text-muted">{col.value === "todo" ? "Nothing to do. Add a task above." : "Empty."}</p>
+                  <p className="p-2 text-sm text-muted">{col.value === "todo" ? "Nothing waiting. Add a task above." : col.value === "doing" ? "Nothing in progress." : "Nothing finished yet."}</p>
                 ) : (
                   <ul className="space-y-2">
                     {list.map((t) => {
                       const late = t.status !== "done" && t.due_date && t.due_date < today;
                       return (
-                        <li key={t.id} className="rounded-lg border border-line bg-white p-3">
+                        <li key={t.id} className="rounded-2xl bg-surface p-3 shadow-soft">
                           <div className="flex items-start gap-2">
                             <p className={`flex-1 font-medium ${t.status === "done" ? "text-done line-through" : ""}`}>{t.status === "done" && <span className="sr-only">Done: </span>}{t.title}</p>
                             <TaskStatusSelect id={t.id} status={t.status} />

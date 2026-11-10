@@ -59,3 +59,14 @@ export function relativeDay(iso: string): string {
 export function shortDate(ts: string): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(new Date(ts));
 }
+
+/** "Good morning" / "Good afternoon" / "Good evening" by the time in Asia/Karachi. */
+export function greeting(): string {
+  const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "numeric", hour12: false }).format(new Date()));
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+
+/** "Tuesday, 10 Nov" for today in Asia/Karachi. */
+export function todayLong(): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "long", day: "numeric", month: "short" }).format(new Date());
+}

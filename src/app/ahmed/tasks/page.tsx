@@ -24,11 +24,11 @@ export default async function AhmedTasks() {
   return (
     <div className="space-y-5">
       <Link href="/ahmed" className="text-lg font-semibold text-link">← Home</Link>
-      <h1 className="text-3xl font-bold">My tasks</h1>
+      <h1 className="font-display text-3xl font-bold text-navy">My to-do list</h1>
       {error ? (
         <p role="alert" className="card text-overdue">Could not load tasks: {error.message}</p>
       ) : !tasks?.length ? (
-        <p className="card">No open tasks. Add one below.</p>
+        <p className="card">Nothing to do right now. Add something below.</p>
       ) : (
         <ul className="space-y-3">
           {tasks.map((t) => {
@@ -47,7 +47,7 @@ export default async function AhmedTasks() {
           })}
         </ul>
       )}
-      <h2 className="pt-2 text-2xl font-bold">Add a task for me</h2>
+      <h2 className="pt-2 text-2xl font-bold text-navy">Add something to do</h2>
       <TaskForm profiles={profiles} clients={clients} currentUserId={me.id} simple />
     </div>
   );

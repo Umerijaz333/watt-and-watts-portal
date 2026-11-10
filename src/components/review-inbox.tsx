@@ -47,7 +47,7 @@ export function ReviewInbox({ items }: { items: InboxItem[] }) {
 
   return (
     <div className="space-y-2">
-      <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+      <ul className="list-card">
         {visible.map((i) => (
           <li key={i.kind + i.id} className="flex items-start gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">

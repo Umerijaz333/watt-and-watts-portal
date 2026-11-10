@@ -5,7 +5,7 @@ export default async function AhmedLayout({ children }: { children: React.ReactN
   const profile = await requireProfile();
   return (
     <div className="mx-auto min-h-dvh max-w-lg text-xl text-ink">
-      <header className="flex items-center justify-between bg-navy px-4 py-3 text-paper">
+      <header className="flex items-center justify-between bg-navy px-4 py-2.5 text-paper">
         <Link href="/ahmed" className="flex items-center gap-2 font-display font-bold text-paper">
           <span>Home</span>
         </Link>

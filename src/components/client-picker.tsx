@@ -3,6 +3,7 @@
 import { useHydrated } from "@/lib/use-hydrated";
 import { useMemo, useState, useTransition } from "react";
 import { quickCreateClient } from "@/app/actions/clients";
+import { Avatar } from "@/components/avatar";
 
 export type ClientOption = { id: string; name: string; firm: string | null };
 
@@ -14,7 +15,7 @@ export function ClientPicker({
 }: {
   clients: ClientOption[];
   value: string | null;
-  onChange: (id: string | null) => void;
+  onChange: (id: string | null, name?: string) => void;
 }) {
   const ready = useHydrated();
   const [clients, setClients] = useState(initial);
@@ -47,7 +48,7 @@ export function ClientPicker({
 
   if (creating)
     return (
-      <div className="space-y-3 rounded-xl border-2 border-gray-400 bg-white p-4">
+      <div className="space-y-3 rounded-2xl border-2 border-tint-strong bg-surface p-4 shadow-soft">
         <p className="text-xl font-bold">New client</p>
         <div>
           <label className="mb-1 block text-xl font-semibold" htmlFor="new-client-name">Name *</label>
@@ -73,7 +74,7 @@ export function ClientPicker({
                 if (!clients.some((c) => c.id === dup.id)) setClients((prev) => [{ id: dup.id, name: dup.name, firm: dup.firm }, ...prev]);
                 setCreating(false);
                 setDup(null);
-                onChange(dup.id);
+                onChange(dup.id, dup.name);
               }}
             >
               Yes, use {dup.name}
@@ -92,7 +93,7 @@ export function ClientPicker({
                   setDup(null);
                   setNewName("");
                   setNewPhone("");
-                  onChange(c.id);
+                  onChange(c.id, c.name);
                 })
               }
             >
@@ -117,7 +118,7 @@ export function ClientPicker({
                 setCreating(false);
                 setNewName("");
                 setNewPhone("");
-                onChange(c.id);
+                onChange(c.id, c.name);
               });
             }}
           >
@@ -134,16 +135,19 @@ export function ClientPicker({
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Type client name…"
+        placeholder="Start typing their name…"
         className="input py-4 text-xl"
         aria-label="Search client"
       />
-      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-gray-400 bg-white">
+      <ul className="list-card">
         {matches.map((c) => (
           <li key={c.id}>
-            <button type="button" disabled={!ready} onClick={() => onChange(c.id)} className="block w-full px-4 py-4 text-left hover:bg-tint active:bg-tint-strong">
-              <span className="block text-xl font-semibold">{c.name}</span>
-              {c.firm && <span className="block text-lg">{c.firm}</span>}
+            <button type="button" disabled={!ready} onClick={() => onChange(c.id, c.name)} className="flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-tint active:bg-tint-strong">
+              <Avatar name={c.name} size={44} />
+              <span className="min-w-0">
+                <span className="block text-xl font-semibold text-navy">{c.name}</span>
+                {c.firm && <span className="block text-lg">{c.firm}</span>}
+              </span>
             </button>
           </li>
         ))}

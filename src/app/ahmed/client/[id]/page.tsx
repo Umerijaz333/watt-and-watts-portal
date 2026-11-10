@@ -7,8 +7,8 @@ import { LastSpoke } from "@/components/last-spoke";
 import { FollowUpActions } from "@/components/followup-actions";
 import { Timeline } from "@/components/timeline";
 import { formatDate } from "@/lib/dates";
-import { stageLabel } from "@/lib/constants";
 import { StageChip } from "@/components/stage-chip";
+import { Avatar } from "@/components/avatar";
 
 export default async function AhmedClientSummary({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,28 +23,30 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
   if (!c) notFound();
 
   const rows: [string, string | null][] = [
-    ["Next follow-up", formatDate(c.next_follow_up)],
-    ["Stage", stageLabel(c.stage)],
-    ["Discussed so far", c.discussed_summary],
-    ["Next to discuss", c.next_to_discuss],
-    ["Pending from us", c.pending_from_us],
+    ["Call them again on", formatDate(c.next_follow_up)],
+    ["What we have discussed", c.discussed_summary],
+    ["What to talk about next", c.next_to_discuss],
+    ["They are waiting on us for", c.pending_from_us],
   ];
 
   return (
     <div className="space-y-5">
       <Link href="/ahmed/followups" className="text-lg font-semibold text-link">← Follow-ups</Link>
-      <div>
-        <h1 className="text-3xl font-bold">{c.name}</h1>
-        {c.firm && <p className="text-xl">{c.firm}</p>}
-        <StageChip stage={c.stage} className="mt-2 text-base" />
+      <div className="flex items-start gap-4">
+        <Avatar name={c.name} size={64} />
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl font-bold leading-tight text-navy">{c.name}</h1>
+          {c.firm && <p className="text-xl">{c.firm}</p>}
+          <StageChip stage={c.stage} className="mt-2 text-base" />
+        </div>
       </div>
 
       <div className="grid gap-3">
-        <Link href={`/ahmed/note?client=${c.id}`} className="btn-primary w-full py-5 text-2xl"><NoteIcon size={28} /> Add note</Link>
+        <Link href={`/ahmed/note?client=${c.id}`} className="btn-primary w-full py-5 text-2xl"><NoteIcon size={28} /> Write down what you talked about</Link>
       </div>
 
       <LastSpoke note={last.get(c.id)} pending={c.pending_from_client} large />
-      <FollowUpActions clientId={c.id} phone={c.phone} />
+      <FollowUpActions clientId={c.id} phone={c.phone} name={c.name} />
 
       <dl className="card space-y-3">
         {rows.map(([k, v]) => (
@@ -56,7 +58,7 @@ export default async function AhmedClientSummary({ params }: { params: Promise<{
       </dl>
 
       <section>
-        <h2 className="mb-2 text-2xl font-bold">Recent history</h2>
+        <h2 className="mb-3 text-2xl font-bold text-navy">Recent history</h2>
         <Timeline items={timeline} large />
       </section>
     </div>

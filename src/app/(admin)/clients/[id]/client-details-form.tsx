@@ -7,10 +7,10 @@ import { ActionForm, FormMessage, SubmitButton } from "@/components/form-bits";
 import type { Client } from "@/lib/types";
 
 const FIELDS = [
-  { name: "discussed_summary", label: "Discussed so far" },
-  { name: "next_to_discuss", label: "Next to discuss" },
-  { name: "pending_from_client", label: "Pending from client" },
-  { name: "pending_from_us", label: "Pending from us" },
+  { name: "discussed_summary", label: "What we have discussed" },
+  { name: "next_to_discuss", label: "What to talk about next" },
+  { name: "pending_from_client", label: "Waiting on them for" },
+  { name: "pending_from_us", label: "They are waiting on us for" },
 ] as const;
 
 export function ClientDetailsForm({ client }: { client: Client }) {

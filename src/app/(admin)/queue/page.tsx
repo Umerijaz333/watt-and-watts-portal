@@ -1,5 +1,6 @@
 import Link from "@/components/link";
-import { getQueue, getBusyFirms, firmKey, type QueueRow } from "@/lib/outreach";
+import { getQueue, getBusyFirms, getDirectoryStatus, firmKey, type QueueRow } from "@/lib/outreach";
+import { DirectorySetup } from "@/components/directory-setup";
 import { requireAdmin } from "@/lib/auth";
 import { QueueActions } from "@/components/queue-actions";
 import { Avatar } from "@/components/avatar";
@@ -9,7 +10,15 @@ type Search = { area?: string; tier?: string; q?: string; review?: string; skipp
 
 export default async function QueuePage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const [, queue, busy] = await Promise.all([requireAdmin(), getQueue({ includeSkipped: sp.skipped === "1" }), getBusyFirms()]);
+  const [, status] = await Promise.all([requireAdmin(), getDirectoryStatus()]);
+  if (status !== "ok")
+    return (
+      <div className="space-y-5">
+        <h1 className="font-display text-3xl font-bold text-navy">Who to meet next</h1>
+        <DirectorySetup status={status} />
+      </div>
+    );
+  const [queue, busy] = await Promise.all([getQueue({ includeSkipped: sp.skipped === "1" }), getBusyFirms()]);
 
   const areas = [...new Set(queue.map((r) => r.area).filter(Boolean))].sort() as string[];
   const term = (sp.q ?? "").trim().toLowerCase();

@@ -205,3 +205,17 @@ export function reminderText(meetings: WeekMeeting[]) {
 }
 
 export const reminderHref = (text: string) => (AHMED_WHATSAPP ? `https://wa.me/${AHMED_WHATSAPP}?text=${encodeURIComponent(text)}` : null);
+
+export type DirectoryStatus = "ok" | "no_migration" | "not_imported";
+
+/**
+ * Why the queue might be empty: the directory migration has not been run (columns missing),
+ * or it has but the architect list was never imported.
+ */
+export async function getDirectoryStatus(): Promise<DirectoryStatus> {
+  const supabase = await createClient();
+  // A normal GET (not HEAD) so a missing column comes back as a readable error.
+  const { data, error } = await supabase.from("clients").select("source_id, is_firm_primary").not("source_id", "is", null).limit(1);
+  if (error) return error.code === "42703" || error.code === "PGRST204" || /column|source_id|is_firm_primary/i.test(error.message) ? "no_migration" : "ok";
+  return (data ?? []).length === 0 ? "not_imported" : "ok";
+}

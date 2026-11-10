@@ -2,7 +2,7 @@ import Link from "@/components/link";
 import { requireAdmin } from "@/lib/auth";
 import { getProfiles } from "@/lib/queries";
 import {
-  getQueue, getBusyFirms, getWeekMeetings, weekRange, weekProgress, suggest, firmKey,
+  getQueue, getBusyFirms, getWeekMeetings, getDirectoryStatus, weekRange, weekProgress, suggest, firmKey,
   meetingWhen, reminderText, reminderHref, callNumber, WEEKLY_TARGET, AHMED_WHATSAPP,
 } from "@/lib/outreach";
 import { todayISO } from "@/lib/dates";
@@ -10,17 +10,20 @@ import { plusDays } from "@/lib/date-options";
 import { PlanForm, type Candidate } from "@/components/plan-form";
 import { MeetingAdmin } from "@/components/meeting-admin";
 import { WeekProgress } from "@/components/week-progress";
+import { DirectorySetup } from "@/components/directory-setup";
 
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ suggest?: string; client?: string }> }) {
   const sp = await searchParams;
   const range = weekRange();
-  const [me, profiles, queue, busy, week] = await Promise.all([requireAdmin(), getProfiles(), getQueue(), getBusyFirms(), getWeekMeetings(range)]);
-  if (week.missingTable)
+  const [, status] = await Promise.all([requireAdmin(), getDirectoryStatus()]);
+  if (status === "no_migration")
     return (
-      <p role="alert" className="card text-overdue">
-        The weekly plan needs a one-time database update: run <code>supabase/migrations/20261111000000_directory.sql</code> in the Supabase SQL Editor.
-      </p>
+      <div className="space-y-5">
+        <h1 className="font-display text-3xl font-bold text-navy">This week&apos;s plan</h1>
+        <DirectorySetup status={status} />
+      </div>
     );
+  const [me, profiles, queue, busy, week] = await Promise.all([requireAdmin(), getProfiles(), getQueue(), getBusyFirms(), getWeekMeetings(range)]);
 
   const progress = weekProgress(week.meetings, range);
   const open = queue.filter((r) => !busy.has(firmKey(r)));
@@ -48,6 +51,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
       <WeekProgress done={progress.done} planned={progress.planned} target={progress.target} start={range.start} end={range.end} />
 
+      {status === "not_imported" && <DirectorySetup status={status} />}
+
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-navy">Plan meetings</h2>
@@ -57,7 +62,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <p className="card text-muted">
             Tap <strong>Suggest next 2</strong> to pick from the queue (Ahmed&apos;s picks first, one per firm, same area where possible),
             or use <Link href="/queue" className="font-semibold text-link">Plan meeting</Link> on anyone in the queue.
-            {open.length === 0 && " The queue is empty: every firm has a meeting or was skipped."}
+            {open.length === 0 && status === "ok" && " The queue is empty: every firm has a meeting or was skipped."}
           </p>
         ) : (
           <PlanForm
